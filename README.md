@@ -21,23 +21,22 @@ This document acts as the base operating reference for the environment and will 
 
 - Primary network: 10.0.0.1 / 255.255.0.0
 - Wireless access currently segmented into isolated SSIDs
-- Target design is a VLAN-based production network with managed routing, control planes, and service isolation
+- Target design keeps the trusted LAN interconnected and uses VLANs to isolate IoT and Guest traffic
 
 ### Target Network Segmentation
 
 | Network | VLAN | Subnet | Access | Security Model |
 |---|---:|---|---|---|
-| Production / Management | 10 | 10.0.1.x | Static | Internal routing allowed |
-| Production / Servers | 20 | 10.0.2.x | Static / mixed | Internal services |
-| Personal Devices | 30 | 10.0.3.x | DHCP | Internal access allowed |
-| IoT | N/A | 192.168.1.0/24 | DHCP | Internet-only, no access to internal networks |
-| Guest / DMZ | N/A | 192.168.2.0/24 | DHCP | Internet-only |
+| Trusted LAN (management, servers, personal) | Native / untagged | 10.0.0.0/16 | DHCP reservations and DHCP | Interconnected; restrict management services at the host/application layer |
+| IoT | 30 | 192.168.1.0/24 | DHCP | Internet access; deny initiation to trusted and Guest networks |
+| IoT | 30 | 192.168.1.0/24 | DHCP | Internet access; allow DNS to AdGuard only; deny other trusted/Guest access |
+| Guest / DMZ | 40 | 192.168.2.0/24 | DHCP | Internet-only; DNS exception to selected resolver; deny other private-network access |
 
 ### Wireless Mapping
 
-- WoogleNet → VLAN 30
-- WoogleNetIOT → 192.168.1.0/24
-- WoogleNetGuest → 192.168.2.0/24
+- WoogleNet → Trusted LAN (native / untagged)
+- WoogleNetIOT → VLAN 30, 192.168.1.0/24
+- WoogleNetGuest → VLAN 40, 192.168.2.0/24
 
 ---
 
@@ -45,30 +44,30 @@ This document acts as the base operating reference for the environment and will 
 
 ```mermaid
 flowchart LR
-    WAN[Internet / ISP] --> GW[UBNT Cloud Gateway Fiber]
+    WAN[Internet / ISP] --> GW[UniFi Dream Machine Pro]
     GW --> SW1[Core Switches\nUBNT + TP-Link]
 
-    SW1 --> VLAN10[Management VLAN 10\n10.0.1.x]
-    SW1 --> VLAN20[Servers VLAN 20\n10.0.2.x]
-    SW1 --> VLAN30[Personal VLAN 30\n10.0.3.x]
-    SW1 --> IOT[IoT Network\n192.168.1.0/24]
-    SW1 --> GUEST[Guest / DMZ\n192.168.2.0/24]
+    SW1 --> TRUSTED[Trusted LAN\n10.0.0.0/16]
+    SW1 --> IOT[IoT VLAN 30\n192.168.1.0/24]
+    SW1 --> GUEST[Guest / DMZ VLAN 40\n192.168.2.0/24]
 
-    VLAN10 --> AP1[Access Points\nUAC-LR / UAC-Pro]
-    VLAN20 --> NAS[TrueNAS Cluster]
-    VLAN20 --> VM[Ubuntu VMs\nAD / WEB / PROXY / DL]
-    VLAN20 --> CONT[Docker Containers\nPlex / Immich / Vaultwarden / Wiki]
-    VLAN30 --> CLIENTS[Phones / Laptops / Desktops]
+    TRUSTED --> AP1[Access Points\nUAC-LR / UAC-Pro]
+    TRUSTED --> PVE[Proxmox Cluster\nDAX / MAX / PAX]
+    TRUSTED --> JAX[Ubuntu Docker Host]
+    TRUSTED --> SAX[SAX\nUbuntu GPU Server]
+    TRUSTED --> CLIENTS[Servers / Phones / Laptops / Desktops]
 
     IOT --> IOTDEV[IoT Devices]
     GUEST --> GUESTDEV[Guest Clients]
 
-    VM --> PROXY[Reverse Proxy]
+    JAX --> PROXY[Reverse Proxy]
+    JAX --> CONT[Docker Services]
+    SAX --> AI[Ollama / Open WebUI]
     PROXY --> CONT
     GW --> INTERNET[Outbound Internet Access]
 ```
 
-This diagram represents the target architecture: a gateway-based border router with traffic segregation at the switch and wireless layers.
+This diagram represents one interconnected trusted LAN, with IoT and Guest/DMZ separated by VLANs and firewall policy. The NAS platform and export are not selected yet.
 
 ---
 
@@ -78,7 +77,7 @@ This diagram represents the target architecture: a gateway-based border router w
 
 | Device | Model | Quantity | Purpose |
 |---|---|---:|---|
-| Gateway | UBNT Cloud Gateway Fiber (UCG-Fiber) | 1 | Primary internet edge and routing |
+| Gateway | UniFi Dream Machine Pro (UDM-Pro) | 1 | Primary internet edge, routing, and VLAN gateway |
 | Core / Distribution Switch | UBNT 24 Port | 2 | Internal VLAN distribution |
 | Access / Edge Switch | TP-Link 24 Port | 2 | Client and AP uplinks |
 | Access Point | UAC-LR | 3 | General coverage |
@@ -89,8 +88,10 @@ This diagram represents the target architecture: a gateway-based border router w
 
 | Hardware | Operating System | Quantity | Role |
 |---|---|---:|---|
-| Dell R720 | TrueNAS | 4 | Storage / hypervisor platform |
-| Ubuntu Server VM Host | Ubuntu Server | Variable | Docker and VM runtime environment |
+| Dell R720 | Proxmox VE | 3 | Hypervisor cluster: DAX, MAX, PAX |
+| JAX | Ubuntu Server (bare metal) | 1 | Non-GPU Docker host for foundation, data, and media stacks |
+| SAX | Ubuntu Server (bare metal) | 1 | New GPU host for Ollama and GPU-enabled containers |
+| NAS | Not selected | TBD | NFS data root is deferred until storage is provisioned |
 
 ### Rack Layout (42U)
 
@@ -122,33 +123,26 @@ This diagram represents the target architecture: a gateway-based border router w
 
 | Service Category | Service / Role | Host / Platform | Network | Notes |
 |---|---|---|---|---|
-| Infrastructure | TrueNAS | Dell R720 cluster | 10.0.2.x | Storage and virtualization foundation |
-| Identity | Active Directory / Domain Controller | Ubuntu VM | 10.0.2.x | Centralized access and auth |
-| Proxy | Reverse Proxy | Ubuntu VM | 10.0.2.x | Frontend entry point |
-| Web | Web Server | Ubuntu VM | 10.0.2.x | Hosted web applications |
-| Downloads | Download Manager | Ubuntu VM | 10.0.2.x | Media and transfer workloads |
-| Media | Plex | Container | 10.0.2.x | Streaming service |
-| Automation | Tdarr / TMM | Container | 10.0.2.x | Media processing workflows |
-| Personal Apps | Immich | Container | 10.0.2.x | Photo library |
-| Password Manager | Vaultwarden | Container | 10.0.2.x | Self-hosted credential storage |
-| Documentation | Wiki | Container | 10.0.2.x | Internal knowledge base |
-| E-book Library | Calibre | Container | 10.0.2.x | Book management |
-| DNS Filtering | AdGuard Home | Container / VM | 10.0.2.x | Internal DNS and filtering; configure clients only after testing resolution |
-| AI | Ollama, Open WebUI | GPU-enabled Ubuntu VM | 10.0.2.x | Model API and web interface |
-| Knowledge Base | BookStack | Container | 10.0.2.x | Documentation and future RAG source |
-| Files and Documents | Nextcloud, Paperless-ngx | Containers | 10.0.2.x | File sync and document archive |
-| Media | Plex, Jellyfin, Sonarr, Radarr, Prowlarr | Containers | 10.0.2.x | Media playback and automation |
-| Media Utilities | Tdarr, TMM, download client | Containers | 10.0.2.x | Transcoding, metadata, and downloads; select a download client before Sprint 4 |
-| Personal Libraries | Immich, Audiobookshelf, Calibre, Navidrome | Containers | 10.0.2.x | Photos, audiobooks, ebooks, and music |
-| Sync and Gaming | RomM | Containers | 10.0.2.x | Game library management |
-| Smart Home | Home Assistant | VM / dedicated host | IoT / trusted networks | AI integration; restrict exposed entities |
-| Operations | Homepage, Uptime Kuma, Syncthing | Containers | 10.0.2.x | Dashboard, monitoring, and file sync |
+| Infrastructure | Proxmox VE | DAX, MAX, PAX | Trusted LAN | Three-node R720 cluster; NAS platform remains undecided |
+| Proxy | Nginx Proxy Manager | JAX / Docker | Trusted LAN | Publish selected services only; admin interface stays private |
+| DNS Filtering | AdGuard Home | JAX / Docker | Trusted LAN | Internal DNS and filtering; migrate DHCP DNS only after testing |
+| Remote Access | Tailscale | JAX and SAX / host | Trusted LAN | Private administration and remote access |
+| AI | Ollama, Open WebUI | SAX / Ubuntu bare metal | Trusted LAN | Model API and web interface using local GPUs |
+| Knowledge Base | BookStack | JAX / Docker | Trusted LAN | Documentation and future RAG source |
+| Files and Documents | Nextcloud, Paperless-ngx | JAX / Docker | Trusted LAN | File sync and document archive |
+| Password Manager | Vaultwarden | JAX / Docker | Trusted LAN | Restrict to trusted/VPN paths and back up securely |
+| Media | Plex, Jellyfin, Sonarr, Radarr, Prowlarr | JAX / Docker | Trusted LAN | Media playback and automation; shared data root required for hardlinks |
+| Media Utilities | Tdarr, TMM, download client | JAX / Docker | Trusted LAN | Transcoding, metadata, and downloads; select a download client before Sprint 4 |
+| Personal Libraries | Immich, Audiobookshelf, Calibre, Navidrome | JAX / Docker | Trusted LAN | Photos, audiobooks, ebooks, and music |
+| Sync and Gaming | Syncthing, RomM | JAX / Docker | Trusted LAN | File synchronization and game library management |
+| Smart Home | Home Assistant | Dedicated host / VM | Trusted LAN with IoT rules | AI integration; restrict exposed entities and firewall flows |
+| Operations | Homepage, Uptime Kuma | Docker host | Trusted LAN | Dashboard and monitoring |
 
 ### Naming Convention
 
 | Category | Convention | Example |
 |---|---|---|
-| Server | 3-letter uppercase | DAX, MAX, JAX, PAX |
+| Server | 3-letter uppercase | DAX, MAX, JAX, PAX, SAX |
 | Container | [Server Name][App] | DAXPlex, MAXImmich |
 | Network device | WoogleNet[Function][ID/Model] | WoogleNetRouter, WoogleNetSwitch01 |
 | Access point | [Location] | UPSTAIRS, DOWNSTAIRS, MAIN |
@@ -172,20 +166,38 @@ The platform uses Docker Engine and Docker Compose to make application deploymen
 
 ### Bootstrap Scripts
 
-The repository scripts are the starting point for Ubuntu VM provisioning and Docker installation. Review the configuration values and have console access before applying network changes:
+The scripts bootstrap JAX and SAX, install Docker and Tailscale, and provide a Compose lifecycle helper. Review configuration and keep local console access before network changes:
 
-- [setup_network.sh](setup_network.sh): set the Ubuntu VM hostname and static address; optionally configure one NFS data-root mount. The example address follows the documented `10.0.2.0/24` server network and must be checked against the final gateway/DHCP plan.
-- [Docker Installation Script for Ubunt.sh](Docker%20Installation%20Script%20for%20Ubunt.sh): install Docker Engine and Compose on Ubuntu. Run with `sudo` from the intended non-root login account; the account joins the privileged `docker` group.
+- [setup_network.sh](setup_network.sh): configure JAX (`10.0.2.10/16`) or SAX (`10.0.2.11/16`) on the trusted LAN via `WOOGLENET_*` overrides; optional NFS is disabled until a NAS export exists. Reserve both addresses in UDM-Pro DHCP and set each real NIC name before running.
+- [Docker Installation Script for Ubunt.sh](Docker%20Installation%20Script%20for%20Ubunt.sh): install Docker Engine and Compose on Ubuntu. Run with `sudo` from the intended non-root login account; membership in the `docker` group grants root-equivalent access.
+- [scripts/install-tailscale.sh](scripts/install-tailscale.sh): install and enable the native Tailscale daemon; authorize separately with `sudo tailscale up`.
+- [scripts/compose-stack.sh](scripts/compose-stack.sh): validate and operate Compose projects; `down` preserves named volumes.
+- [scripts/compose-stack.sh](scripts/compose-stack.sh): validate and operate Compose projects; `down` preserves named volumes.
+- [stacks/foundation/compose.yaml](stacks/foundation/compose.yaml): pinned AdGuard Home and Nginx Proxy Manager stack for JAX.
+- [stacks/ai/compose.yaml](stacks/ai/compose.yaml): GPU-isolated Ollama endpoints and Open WebUI stack for SAX.
 
-Example:
+Example from the repository root; run the matching command locally on each host and replace its interface name:
 
 ```bash
-chmod 750 setup_network.sh "Docker Installation Script for Ubunt.sh"
-sudo ./setup_network.sh
+# On JAX:
+sudo env WOOGLENET_HOSTNAME=jax WOOGLENET_INTERFACE=enpXsY WOOGLENET_STATIC_IP=10.0.2.10/16 ./setup_network.sh
 sudo ./"Docker Installation Script for Ubunt.sh"
+# On SAX:
+sudo env WOOGLENET_HOSTNAME=sax WOOGLENET_INTERFACE=enpXsY WOOGLENET_STATIC_IP=10.0.2.11/16 ./setup_network.sh
+sudo ./"Docker Installation Script for Ubunt.sh"
+sudo bash scripts/install-tailscale.sh
+sudo tailscale up
+# On JAX:
+cp stacks/foundation/.env.example stacks/foundation/.env
+bash scripts/compose-stack.sh validate stacks/foundation
+bash scripts/compose-stack.sh up stacks/foundation
+# On SAX, fill the Tailnet IP and GPU UUIDs in stacks/ai/.env first:
+cp stacks/ai/.env.example stacks/ai/.env
+bash scripts/compose-stack.sh validate stacks/ai
+bash scripts/compose-stack.sh up stacks/ai
 ```
 
-The network script uses `netplan try` so an unconfirmed change rolls back. Run it from the VM console or another out-of-band session, not over the only SSH connection. It does not configure UniFi VLANs or firewall rules.
+The foundation stack runs on JAX at `10.0.2.10`; DNS and NPM HTTP/HTTPS bind to that reserved LAN IP, and setup/admin ports bind to loopback. Do not configure WAN port forwards or advertise AdGuard via DHCP until Sprint 1 verification passes. Run `setup_network.sh` from each host's local console; it does not configure UniFi VLANs or firewall rules.
 
 ---
 
@@ -210,7 +222,7 @@ The gateway provides routing and DHCP. AdGuard Home is the planned internal DNS/
 
 The implementation roadmap is maintained in [SPRINT-PLAN.md](SPRINT-PLAN.md). It expands the requested Sprints 0-5 into prerequisites, run steps, and acceptance checks. Complete and verify each sprint before exposing the next set of services.
 
-The existing [Network upgrade.docx](Network%20upgrade.docx) contains an earlier UDM-Pro/Proxmox/`192.168.20.0/24` design. It conflicts with this README's UCG-Fiber/TrueNAS/`10.0.2.0/24` target; do not run its embedded script or apply its VLAN instructions until the topology and addressing decision is reconciled. The sprint plan documents the current working assumptions and the decisions still required.
+The existing [Network upgrade.docx](Network%20upgrade.docx) contains an earlier VLAN/IP proposal and an embedded Ubuntu script. The confirmed target is documented here and in the sprint plan; do not run the embedded script or apply its obsolete `192.168.20.0/24` settings.
 
 ---
 

@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# WoogleNet Sprint 0: Ubuntu VM network provisioning.
+# WoogleNet Sprint 1: Ubuntu host network provisioning.
 # Review every value below before running; defaults are examples, not a live config.
 set -Eeuo pipefail
 
-INTERFACE="ens18"
-STATIC_IP="10.0.2.10/24"
-GATEWAY="10.0.2.1"
-DNS_SERVERS="1.1.1.1" # Replace with AdGuard's stable address after Sprint 1.
-HOSTNAME="wooglenet-server"
+INTERFACE="${WOOGLENET_INTERFACE:-REPLACE_WITH_INTERFACE}"
+STATIC_IP="${WOOGLENET_STATIC_IP:-10.0.2.11/16}"
+GATEWAY="${WOOGLENET_GATEWAY:-10.0.0.1}"
+DNS_SERVERS="${WOOGLENET_DNS_SERVERS:-1.1.1.1}" # Replace with AdGuard's stable address after Sprint 1.
+HOSTNAME="${WOOGLENET_HOSTNAME:-sax}"
 
-# Optional NFS export. Keep empty to skip NAS setup until TrueNAS is configured.
-NAS_IP=""
-NFS_EXPORT=""
-NFS_MOUNT="/mnt/nas/data"
+# Optional NFS export. Keep empty until a NAS and export have been provisioned.
+NAS_IP="${WOOGLENET_NAS_IP:-}"
+NFS_EXPORT="${WOOGLENET_NFS_EXPORT:-}"
+NFS_MOUNT="${WOOGLENET_NFS_MOUNT:-/mnt/nas/data}"
 
 if [[ ${EUID} -ne 0 ]]; then
     echo "Run with sudo: sudo ./setup_network.sh" >&2
@@ -25,8 +25,8 @@ if ! command -v netplan >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! ip link show "$INTERFACE" >/dev/null 2>&1; then
-    echo "Network interface '$INTERFACE' was not found. Set INTERFACE at the top of this script." >&2
+if [[ "$INTERFACE" == "REPLACE_WITH_INTERFACE" ]] || ! ip link show "$INTERFACE" >/dev/null 2>&1; then
+    echo "Network interface '$INTERFACE' was not found. Set WOOGLENET_INTERFACE to a name shown below." >&2
     ip -br link >&2
     exit 1
 fi
@@ -70,7 +70,7 @@ if [[ -n "$NAS_IP" || -n "$NFS_EXPORT" ]]; then
     mount "$NFS_MOUNT"
 fi
 
-echo "Sprint 0 VM provisioning complete. Verify routing and mounts before continuing."
+echo "Ubuntu host provisioning complete. Verify routing and mounts before continuing."
 
 
 

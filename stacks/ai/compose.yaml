@@ -1,0 +1,69 @@
+name: wooglenet-ai
+
+services:
+  ollama-3060:
+    image: ollama/ollama:0.40.0
+    container_name: SAXOllama3060
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    ports:
+      - "${SAX_TAILSCALE_IP:?Set SAX_TAILSCALE_IP in .env}:11434:11434/tcp"
+    volumes:
+      - ollama_3060:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids:
+                - "${GPU_3060_ID:?Set GPU_3060_ID in .env}"
+              capabilities: [gpu]
+    networks:
+      - ai
+
+  ollama-1070:
+    image: ollama/ollama:0.40.0
+    container_name: SAXOllama1070
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    ports:
+      - "${SAX_TAILSCALE_IP:?Set SAX_TAILSCALE_IP in .env}:11435:11434/tcp"
+    volumes:
+      - ollama_1070:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids:
+                - "${GPU_1070_ID:?Set GPU_1070_ID in .env}"
+              capabilities: [gpu]
+    networks:
+      - ai
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.11.4
+    container_name: SAXOpenWebUI
+    restart: unless-stopped
+    depends_on:
+      - ollama-3060
+      - ollama-1070
+    environment:
+      OLLAMA_BASE_URLS: "http://ollama-3060:11434;http://ollama-1070:11434"
+    ports:
+      - "${SAX_LAN_IP:?Set SAX_LAN_IP in .env}:3002:8080/tcp"
+    volumes:
+      - open_webui_data:/app/backend/data
+    networks:
+      - ai
+
+networks:
+  ai:
+    name: wooglenet-ai
+
+volumes:
+  ollama_3060:
+  ollama_1070:
+  open_webui_data:

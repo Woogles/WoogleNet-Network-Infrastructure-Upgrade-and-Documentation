@@ -1,22 +1,22 @@
 # WoogleNet Deployment Sprint Plan
 
-This is the execution plan for the service roadmap in `Generalinfo.txt.txt`. Run the sprints in order and treat each acceptance checklist as a gate. The checked-in shell scripts currently bootstrap the Ubuntu VM and Docker; they do not configure the UniFi gateway or deploy the application stacks.
+This is the execution plan for the service roadmap in `Generalinfo.txt.txt`. The user-confirmed target is a UDM-Pro, Proxmox VE on DAX/MAX/PAX, a bare-metal Ubuntu Docker host named JAX repurposed from its R720, and a separate bare-metal Ubuntu GPU host named SAX. Run the sprints in order and treat each acceptance checklist as a gate. Scripts bootstrap hosts and operate Compose stacks; they do not configure UniFi.
 
-## Decisions Required Before Changes
+## Confirmed Design and Remaining Inputs
 
-The current documents describe incompatible configurations. Resolve these before applying network settings or passthrough instructions:
+- Trusted LAN: `10.0.0.0/16`, gateway `10.0.0.1`. This is a private `/16`, not the full `10.0.0.0/8` private block. Keep management, servers, and personal clients interconnected for now; recognize that this leaves the trusted LAN flat.
+- IoT: VLAN 30, `192.168.1.0/24`, gateway `192.168.1.1`.
+- Guest: VLAN 40, `192.168.2.0/24`, gateway `192.168.2.1`.
+- Hardware: UDM-Pro; Proxmox VE on DAX, MAX, and PAX; JAX is repurposed as the non-GPU Ubuntu Docker host; SAX is a separate bare-metal Ubuntu GPU host with the RTX 3060 and GTX 1070. GPU passthrough is not part of this design.
+- Storage: no NAS export is ready. Leave the NFS settings blank until the NAS platform, export, and permissions are defined.
+- UDM-Pro is not configured yet. Use the proposed DHCP pool `10.0.10.100-10.0.20.254`; reserve/exclude JAX `10.0.2.10` and SAX `10.0.2.11`. The final NFS export remains to be recorded.
 
-- Gateway: README and inventory say UCG-Fiber; `Network upgrade.docx` says UDM-Pro.
-- Hypervisor: README says TrueNAS; the Word plan says Proxmox. GPU passthrough steps depend on the selected platform and version.
-- Server subnet: README and updated notes use `10.0.2.0/24`; the Word plan and original network script use `192.168.20.0/24`.
-- VLANs: updated notes use VLANs 10/20/30 for management, servers, and personal devices, but do not assign VLAN IDs to IoT and Guest. The Word plan instead uses VLAN 1/10/20/30/40.
-- Home Assistant: IoT is described as isolated, but Home Assistant needs explicit access to IoT devices and to Ollama. Use narrow firewall allowances rather than bridging all IoT traffic into trusted networks.
-
-The steps below use the README's UCG-Fiber, TrueNAS, and `10.0.2.0/24` as working assumptions. Confirm the final addresses, VLAN IDs, DHCP reservations, firewall policy, hypervisor, GPU ownership, and DNS name before deployment. Never factory-reset network equipment as a routine first step; export a backup and preserve a recovery path.
+Never factory-reset the gateway as a routine first step; export a backup and preserve a recovery path. Guest VLAN 40 is an internet-only client network, not a server DMZ. Do not place Nginx Proxy Manager there or forward WAN traffic to it. Any future public publishing needs a separate threat-model and firewall review.
 
 ## Shared Operating Rules
 
 - Keep Docker Compose projects under `/opt/wooglenet/<stack>` and persistent application data on a backed-up filesystem.
+- For each stack, use `bash scripts/compose-stack.sh validate <directory>` before `up`; use `ps` and `logs` for checks. `down` preserves named volumes.
 - Store passwords, API keys, and initial admin credentials in root-readable `.env` files or Docker secrets; do not commit them. Keep a redacted `.env.example` instead.
 - Pin image versions after validating upgrades. Back up application data and databases before changing image versions.
 - Do not expose Docker's TCP API, database ports, AdGuard administration, or management dashboards to the public internet.
@@ -27,38 +27,36 @@ The steps below use the README's UCG-Fiber, TrueNAS, and `10.0.2.0/24` as workin
 
 ### Tasks
 
-1. Export the gateway and switch configuration. Record current WAN details, management access, uplinks, and a rollback path.
-2. Confirm final networks and VLAN IDs. Reserve static addresses outside DHCP pools for gateway infrastructure, NAS, Ubuntu VM, and services. Do not reuse the example IPs in the script without checking for conflicts.
-3. Create the management, server, personal, IoT, and guest networks. Tag switch uplinks as trunks and assign endpoint ports explicitly. Map each SSID to its intended network.
-4. Apply least-privilege firewall rules: permit established connections; allow trusted clients to required server ports; restrict IoT to required DNS/NTP and explicitly selected controllers; block IoT and Guest from management/server networks; allow their internet access.
-5. Test from a wired client and each SSID before moving servers. Confirm DHCP, gateway, DNS, internet access, and isolation; retain gateway access from the management network.
+1. Export the UDM-Pro and switch configurations. Record WAN details, current LAN mask/DHCP range, management access, uplinks, and a rollback path.
+2. Configure the trusted LAN as `10.0.0.0/16` with gateway `10.0.0.1`. Reserve JAX `10.0.2.10` and SAX `10.0.2.11` outside the proposed DHCP pool `10.0.10.100-10.0.20.254`.
+3. Create VLAN 30 / `192.168.1.0/24` for IoT and VLAN 40 / `192.168.2.0/24` for Guest. Keep WoogleNet on the trusted LAN (native/untagged), and map WoogleNetIOT and WoogleNetGuest to VLANs 30 and 40. Configure trunk/access ports deliberately.
+4. Apply stateful, least-privilege rules: allow DHCP to the UDM-Pro, DNS only to the selected resolver (JAX AdGuard at `10.0.2.10:53` if used), and NTP only to approved time servers; allow trusted Home Assistant to initiate only required device-control flows to IoT; block all other IoT initiation to trusted/Guest; block Guest to private/local networks except its DNS resolver. Keep return traffic stateful and validate UniFi rule order with test clients.
+5. Test from wired trusted, IoT, and Guest clients before moving services. Confirm addressing, DNS, internet access, isolation, and gateway management access.
 
 ### Acceptance
 
-- A client on each network receives an address in the correct subnet and resolves DNS.
-- Guest and IoT cannot initiate connections to management or server hosts; explicitly permitted controller flows work.
-- Trusted clients reach only the required management and service ports.
+- Trusted clients receive addresses in `10.0.0.0/16`; IoT and Guest clients receive addresses in their respective `/24`s.
+- IoT cannot initiate to trusted or Guest hosts; explicitly permitted Home Assistant control works.
+- Guest cannot reach trusted, IoT, or other private networks except the selected DNS resolver, and still has internet access.
+- Gateway management remains reachable from a trusted client, and the backup/rollback path is available.
 - The previous configuration and a documented rollback procedure are available.
 
-The Ubuntu VM's static address and NAS mount are applied in Sprint 1 using [setup_network.sh](setup_network.sh); it is not a UniFi configuration script.
+JAX and SAX addresses are applied in Sprint 1 using [setup_network.sh](setup_network.sh); it is not a UniFi configuration script.
 
 ## Sprint 1: The Foundation
 
-### Ubuntu VM and Docker
+### Ubuntu Host and Docker
 
-1. Create an Ubuntu Server VM on the selected hypervisor. Attach it to the server VLAN, reserve its address, and use the VM console for the first network change.
-2. Review `INTERFACE`, `STATIC_IP`, `GATEWAY`, and `DNS_SERVERS` in `setup_network.sh`. Its defaults are examples for the README's server subnet. Initially use a working external resolver; change to AdGuard only after AdGuard is available and tested.
-3. If the VM has a stable TrueNAS NFS export, configure both `NAS_IP` and `NFS_EXPORT`; otherwise leave both blank. For the media stack, export one data root with `downloads` and `media` beneath it, not separate filesystems.
-4. Run the network script from the VM console. Confirm the Netplan prompt within 120 seconds only after testing the new address and gateway:
+1. Repurpose the R720 named JAX as a bare-metal Ubuntu Server Docker host; keep DAX, MAX, and PAX on Proxmox VE. Connect JAX to the trusted LAN and retain local console access.
+2. Reserve JAX at `10.0.2.10` and SAX at `10.0.2.11` in the UDM-Pro. Run `ip -br link` on each host to find its actual NIC name before provisioning. JAX uses these overrides:
 
    ```bash
-   chmod 750 setup_network.sh
-   sudo ./setup_network.sh
-   ip -br address
-   ip route
-   resolvectl status
+   sudo env WOOGLENET_HOSTNAME=jax WOOGLENET_INTERFACE=enpXsY WOOGLENET_STATIC_IP=10.0.2.10/16 ./setup_network.sh
    ```
 
+   Replace `enpXsY` with the actual interface shown by `ip -br link`. Initially use a working external resolver; switch to AdGuard only after it is available and tested.
+3. Leave `WOOGLENET_NAS_IP` and `WOOGLENET_NFS_EXPORT` unset. When storage is provisioned, configure one data root with `downloads` and `media` below it; do not split those directories across exports/filesystems.
+4. Run the network command from JAX's local console. Confirm Netplan within 120 seconds only after testing the new address and gateway. Check with `ip -br address`, `ip route`, and `resolvectl status`.
 5. Install Docker from the normal Ubuntu login account. The Docker group grants root-equivalent privileges; only add trusted administrators:
 
    ```bash
@@ -69,45 +67,98 @@ The Ubuntu VM's static address and NAS mount are applied in Sprint 1 using [setu
    sudo systemctl status docker --no-pager
    ```
 
-6. Log out and back in before running Docker without `sudo`. Verify the NAS mount with `findmnt /mnt/nas/data` when NFS is configured.
+6. Log out and back in before running Docker without `sudo`.
 
-### GPU passthrough readiness
+### SAX Ubuntu GPU Host
 
-1. Confirm the server model, BIOS settings, hypervisor version, GPU power/cooling, and IOMMU support against that platform's documentation.
-2. Enable IOMMU/VT-d or AMD-Vi in firmware as applicable. Identify GPU and audio-function PCI IDs and their IOMMU group; reserve the intended GPU for the Ubuntu VM only if the hypervisor supports safe isolation.
-3. Pass through the GPU and its associated audio function as required by the platform. Keep console/recovery graphics available; never pass through the only host display adapter without a tested recovery route.
-4. In Ubuntu, verify `lspci -nnk` and `nvidia-smi` before installing the NVIDIA Container Toolkit. Then validate Docker GPU access with NVIDIA's current documented test image for the installed driver/toolkit versions.
+1. Install Ubuntu Server directly on the separate SAX system with the RTX 3060 and GTX 1070 installed. Reserve `10.0.2.11` in the UDM-Pro and keep local console access.
+2. Set `WOOGLENET_INTERFACE` to SAX's real NIC and run the network script from its console:
+
+   ```bash
+   sudo env WOOGLENET_HOSTNAME=sax WOOGLENET_INTERFACE=enpXsY WOOGLENET_STATIC_IP=10.0.2.11/16 ./setup_network.sh
+   ```
+
+3. Install Docker on SAX using the same Ubuntu installer and a trusted non-root login account. Leave NFS unset until the NAS/export is ready.
+
+### Direct GPU readiness
+
+1. Confirm SAX's PSU capacity, airflow, PCIe slot layout, and BIOS support for both installed GPUs.
+2. Install the Ubuntu-recommended NVIDIA driver and verify both cards using `nvidia-smi -L` and `nvidia-smi`.
+3. Install NVIDIA Container Toolkit using NVIDIA's current Ubuntu instructions, configure Docker, and run a GPU container smoke test:
+
+   ```bash
+   sudo nvidia-ctk runtime configure --runtime=docker
+   sudo systemctl restart docker
+   sudo docker run --rm --gpus all nvidia/cuda:12.9.0-base-ubuntu22.04 nvidia-smi
+   ```
+
+   Record each GPU UUID for the Compose `.env` file before deploying Ollama.
 
 ### AdGuard Home, Tailscale, and Nginx Proxy Manager
 
-Deploy each service with a reviewed Compose file and persistent volumes. Do not change DHCP-provided DNS to AdGuard until clients can resolve both local names and external domains through it. Keep Tailscale state persistent and its auth key out of source control. Bind NPM's admin UI to a trusted interface or VPN; expose only its intended HTTP/HTTPS ports.
+Deploy the pinned AdGuard Home and Nginx Proxy Manager services on JAX in `stacks/foundation/compose.yaml`. From the repository root on JAX:
+
+```bash
+cp stacks/foundation/.env.example stacks/foundation/.env
+# Confirm SERVER_LAN_IP matches JAX's reserved UDM-Pro address before continuing.
+bash scripts/compose-stack.sh validate stacks/foundation
+bash scripts/compose-stack.sh up stacks/foundation
+```
+
+The AdGuard setup wizard is at `127.0.0.1:3000`, its post-setup admin port is `127.0.0.1:3001`, and NPM administration is `127.0.0.1:81`. Reach the loopback-only ports from an administrator workstation with:
+
+```bash
+ssh -L 3000:127.0.0.1:3000 -L 3001:127.0.0.1:3001 -L 8181:127.0.0.1:81 <user>@10.0.2.10
+```
+
+Open `http://127.0.0.1:3000` for initial AdGuard setup, `http://127.0.0.1:3001` for its admin UI afterward, and `http://127.0.0.1:8181` for NPM. Change initial/default credentials immediately. The stack does not configure WAN forwarding. AdGuard bridge-mode port publishing may obscure source-client addresses in its logs; verify this before relying on per-client rules/statistics. If original client IP visibility is required, choose host/macvlan networking and re-check admin-port bindings before DHCP cutover.
+
+Run the following on both JAX and SAX; authorize each host without storing an auth key in the repository:
+
+```bash
+sudo bash scripts/install-tailscale.sh
+sudo tailscale up
+tailscale status
+```
+
+Before advertising AdGuard through DHCP, test DNS from SAX and one client on each network, verify local names and external resolution, and retain a working UDM-Pro DNS/recovery path. Use `bash scripts/compose-stack.sh ps stacks/foundation` for status and `bash scripts/compose-stack.sh logs stacks/foundation adguard` for logs.
 
 ### Acceptance
 
 - Ubuntu reboots with the intended static IP, default route, and DNS; management access remains available.
-- Docker and Compose work for the intended non-root login after a new login session.
-- GPU passthrough is visible and stable in the guest, if this VM will host GPUs.
+- Docker and Compose work for the intended non-root login on JAX and SAX after a new login session.
+- Both GPUs are visible to bare-metal Ubuntu and a container GPU smoke test succeeds.
 - AdGuard answers local and external queries; Tailscale access works; NPM serves one test route without exposing its admin UI publicly.
 
 ## Sprint 2: The AI Core
 
 ### Tasks
 
-1. Confirm GPU passthrough and install a driver version supported by both GPUs and the chosen Ubuntu release. Record GPU UUIDs with `nvidia-smi -L` and available VRAM with `nvidia-smi`.
-2. Deploy Ollama with persistent model storage and Open WebUI with a persistent database/data volume. Keep the Ollama API on the server network; allow access only from Open WebUI, Home Assistant when needed, and trusted clients.
-3. Pull one small model first, run a prompt, and confirm GPU utilization. Measure VRAM and response latency before downloading larger models.
-4. Treat GPU allocation as an explicit policy, not an automatic guarantee: test whether one Ollama process should use both GPUs or whether separate Ollama instances pinned to individual GPU UUIDs are needed. Keep speech/image workloads off the primary model GPU only after validating both workloads together.
-5. Configure model access and user accounts in Open WebUI. Back up its state and document model names, quantization, and hardware requirements.
+1. On SAX, confirm both GPUs and install the Ubuntu-recommended NVIDIA driver. Record the UUIDs from `nvidia-smi -L` and confirm VRAM with `nvidia-smi`.
+2. Ensure Tailscale is up on SAX. Copy `stacks/ai/.env.example` to `.env`; set `SAX_LAN_IP=10.0.2.11`, the current SAX Tailnet IP from `tailscale ip -4`, and the exact RTX 3060/GTX 1070 UUIDs. Keep `.env` untracked.
+3. Deploy and validate the GPU-pinned Compose services:
+
+   ```bash
+   bash scripts/compose-stack.sh validate stacks/ai
+   bash scripts/compose-stack.sh up stacks/ai
+   bash scripts/compose-stack.sh ps stacks/ai
+   ```
+
+4. Open `http://10.0.2.11:3002`, create the first administrator, and disable further sign-ups after setup. In **Settings > Admin > Connections**, assign distinct Prefix IDs (for example `RTX3060` and `GTX1070`) to the two Ollama connections so similarly named models are not randomly routed to the other GPU.
+5. Pull one small model on each endpoint, run a prompt, and confirm the expected GPU is active with `nvidia-smi`. Measure VRAM and latency before downloading larger models.
+6. Ollama APIs bind only to SAX's Tailnet IP on ports `11434` and `11435`. Restrict Tailnet ACLs to JAX/Home Assistant and trusted admin devices; do not add WAN forwarding. From JAX, verify both endpoints with `curl http://<SAX_TAILNET_IP>:11434/api/tags` and `curl http://<SAX_TAILNET_IP>:11435/api/tags`. The Home Assistant Ollama integration should use the authorized Tailnet endpoint.
+7. Back up Open WebUI state and document model names, quantization, GPU UUIDs, and recovery steps.
 
 ### Acceptance
 
 - Ollama API is reachable from allowed clients only; Open WebUI can list and use the selected model.
-- `nvidia-smi` shows the intended GPU(s) under inference and the VM remains stable under load.
+- `nvidia-smi` shows the intended GPU(s) under inference and SAX remains stable under load.
+- Each Ollama connection sees only its assigned GPU, Open WebUI can use both, and SAX remains stable under load.
 - Restarting the stack preserves user data and downloaded models.
 
 ## Sprint 3: The Data & Utility Layer
 
-Deploy and validate each application independently. Use separate persistent paths, strong unique credentials, and database backups.
+Deploy these general-purpose application stacks on JAX unless a service requires a separate host. Validate each application independently. Use separate persistent paths, strong unique credentials, and database backups.
 
 - **BookStack:** deploy the application and its supported database; configure URL, mail, and backups. Create the network, storage, and recovery runbooks before indexing them for RAG.
 - **Vaultwarden:** restrict access to trusted/VPN paths, use HTTPS, create the initial account securely, and verify encrypted backups/restores. Do not expose the admin endpoint without a separate access control.
@@ -141,7 +192,7 @@ Both files must report the same device and inode. If `ln` fails, resolve the NAS
 ### Tasks
 
 1. Pick and document a download client; the selected tool list names the ARR apps but not the client.
-2. Deploy Prowlarr, Sonarr, Radarr, the download client, and Plex/Jellyfin. Give all file-management services consistent UID/GID and `/data` mappings.
+2. Deploy Prowlarr, Sonarr, Radarr, the download client, and Plex/Jellyfin on JAX. Give all file-management services consistent UID/GID and `/data` mappings.
 3. Configure library roots under `/data/media`, completed/incomplete downloads under `/data/torrents`, categories, and hardlink imports. Avoid duplicate mounts for the same share.
 4. Add media libraries to Plex and Jellyfin. Configure hardware transcoding only after GPU/driver access is validated; do not pass the same GPU to incompatible host and guest workloads.
 5. Restrict outbound and web access to trusted users; observe applicable content licensing and service terms.
@@ -167,4 +218,4 @@ Both files must report the same device and inode. If `ln` fails, resolve the NAS
 
 ## Automation Backlog
 
-The two checked-in scripts cover only the Ubuntu VM's network/NFS bootstrap and Docker installation. Add per-sprint Compose manifests only after the open topology, IP, domain, GPU, storage, and secret-management decisions are recorded. Each stack should include an `.env.example`, health checks, pinned image versions, persistent volumes, least-privilege port bindings, backup notes, and a tested `docker compose config` result before deployment.
+The checked-in scripts cover JAX/SAX network bootstrap, Docker/Tailscale installation, and a reusable Compose lifecycle. Sprint 1's foundation stack and Sprint 2's GPU-pinned AI stack are in `stacks/`. Add the remaining data, media, and polish manifests in sprint order, using an `.env.example`, a reliable health check or documented external probe, pinned images, persistent volumes, least-privilege bindings, backup notes, and successful `bash scripts/compose-stack.sh validate <directory>` checks. Keep NAS mounts disabled until the NAS/export is selected.

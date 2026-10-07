@@ -1,0 +1,43 @@
+name: wooglenet-foundation
+
+services:
+  adguard:
+    image: adguard/adguardhome:v0.107.79
+    container_name: JAXAdGuard
+    restart: unless-stopped
+    ports:
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP in .env}:53:53/tcp"
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP in .env}:53:53/udp"
+      - "127.0.0.1:3000:3000/tcp"
+      - "127.0.0.1:3001:80/tcp"
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+    networks:
+      - foundation
+
+  npm:
+    image: jc21/nginx-proxy-manager:2.16.0
+    container_name: JAXNPM
+    restart: unless-stopped
+    ports:
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP in .env}:80:80/tcp"
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP in .env}:443:443/tcp"
+      - "127.0.0.1:81:81/tcp"
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - foundation
+
+networks:
+  foundation:
+    name: wooglenet-foundation
+
+volumes:
+  adguard_work:
+  adguard_conf:
+  npm_data:
+  npm_letsencrypt:
