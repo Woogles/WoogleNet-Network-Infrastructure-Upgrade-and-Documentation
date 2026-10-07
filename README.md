@@ -133,6 +133,16 @@ This diagram represents the target architecture: a gateway-based border router w
 | Password Manager | Vaultwarden | Container | 10.0.2.x | Self-hosted credential storage |
 | Documentation | Wiki | Container | 10.0.2.x | Internal knowledge base |
 | E-book Library | Calibre | Container | 10.0.2.x | Book management |
+| DNS Filtering | AdGuard Home | Container / VM | 10.0.2.x | Internal DNS and filtering; configure clients only after testing resolution |
+| AI | Ollama, Open WebUI | GPU-enabled Ubuntu VM | 10.0.2.x | Model API and web interface |
+| Knowledge Base | BookStack | Container | 10.0.2.x | Documentation and future RAG source |
+| Files and Documents | Nextcloud, Paperless-ngx | Containers | 10.0.2.x | File sync and document archive |
+| Media | Plex, Jellyfin, Sonarr, Radarr, Prowlarr | Containers | 10.0.2.x | Media playback and automation |
+| Media Utilities | Tdarr, TMM, download client | Containers | 10.0.2.x | Transcoding, metadata, and downloads; select a download client before Sprint 4 |
+| Personal Libraries | Immich, Audiobookshelf, Calibre, Navidrome | Containers | 10.0.2.x | Photos, audiobooks, ebooks, and music |
+| Sync and Gaming | RomM | Containers | 10.0.2.x | Game library management |
+| Smart Home | Home Assistant | VM / dedicated host | IoT / trusted networks | AI integration; restrict exposed entities |
+| Operations | Homepage, Uptime Kuma, Syncthing | Containers | 10.0.2.x | Dashboard, monitoring, and file sync |
 
 ### Naming Convention
 
@@ -160,45 +170,22 @@ The platform uses Docker Engine and Docker Compose to make application deploymen
 5. Install Docker Engine, CLI, and Compose plugins
 6. Add the current user to the docker group
 
-### Example Automation Script
+### Bootstrap Scripts
+
+The repository scripts are the starting point for Ubuntu VM provisioning and Docker installation. Review the configuration values and have console access before applying network changes:
+
+- [setup_network.sh](setup_network.sh): set the Ubuntu VM hostname and static address; optionally configure one NFS data-root mount. The example address follows the documented `10.0.2.0/24` server network and must be checked against the final gateway/DHCP plan.
+- [Docker Installation Script for Ubunt.sh](Docker%20Installation%20Script%20for%20Ubunt.sh): install Docker Engine and Compose on Ubuntu. Run with `sudo` from the intended non-root login account; the account joins the privileged `docker` group.
+
+Example:
 
 ```bash
-#!/bin/bash
-
-# WoogleNet Docker Installation Script for Ubuntu
-# Run as root or with sudo
-
-set -e
-
-echo "Updating system packages..."
-apt-get update && apt-get upgrade -y
-
-echo "Installing prerequisites..."
-apt-get install -y ca-certificates curl gnupg lsb-release
-
-echo "Adding Docker GPG key..."
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-chmod a+r /etc/apt/keyrings/docker.gpg
-
-echo "Setting up Docker repository..."
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-echo "Installing Docker Engine and Compose..."
-apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-echo "Configuring permissions for current user..."
-SUDO_USER=${SUDO_USER:-$(whoami)}
-usermod -aG docker $SUDO_USER
-
-echo "Installation complete. Please log out and back in for group changes to take effect."
-docker --version
-docker compose version
+chmod 750 setup_network.sh "Docker Installation Script for Ubunt.sh"
+sudo ./setup_network.sh
+sudo ./"Docker Installation Script for Ubunt.sh"
 ```
+
+The network script uses `netplan try` so an unconfirmed change rolls back. Run it from the VM console or another out-of-band session, not over the only SSH connection. It does not configure UniFi VLANs or firewall rules.
 
 ---
 
@@ -206,7 +193,7 @@ docker compose version
 
 ### Local DNS
 
-Internal hostname resolution is handled by the UBNT gateway for routing and local name resolution.
+The gateway provides routing and DHCP. AdGuard Home is the planned internal DNS/filtering service; switch DHCP-advertised DNS to AdGuard only after local and external lookups, fallback behavior, and recovery access have been tested.
 
 ### Recommended External DNS Providers
 
@@ -219,41 +206,11 @@ Internal hostname resolution is handled by the UBNT gateway for routing and loca
 
 ---
 
-## Deployment Checklist
+## Deployment Plan
 
-### Phase 1: Gateway and Network Core
+The implementation roadmap is maintained in [SPRINT-PLAN.md](SPRINT-PLAN.md). It expands the requested Sprints 0-5 into prerequisites, run steps, and acceptance checks. Complete and verify each sprint before exposing the next set of services.
 
-- [ ] Provision UCG-Fiber and configure the WAN connection
-- [ ] Create VLANs for management, servers, and personal devices
-- [ ] Configure IoT and guest subnets separately
-- [ ] Set firewall rules to allow inter-VLAN routing only where needed
-- [ ] Deny IoT and guest traffic to internal 10.0.x.x networks
-
-### Phase 2: Switching and Wireless
-
-- [ ] Adopt all UBNT and TP-Link switches
-- [ ] Assign switch ports to the correct VLANs
-- [ ] Map SSIDs to the target networks
-- [ ] Place access points in the final coverage locations
-- [ ] Validate coverage and wireless performance
-
-### Phase 3: Compute and Services
-
-- [ ] Install the Dell R720 hosts in the rack
-- [ ] Deploy TrueNAS across the cluster
-- [ ] Assign static IPs in the 10.0.2.x range
-- [ ] Provision Ubuntu VM hosts
-- [ ] Run the Docker installation process
-- [ ] Deploy AD, proxy, web, and DL VMs
-- [ ] Launch the containerized service stack
-- [ ] Validate reverse-proxy routing and internal connectivity
-
-### Phase 4: Client Onboarding
-
-- [ ] Connect personal devices to WoogleNet and confirm DHCP assignment in 10.0.3.x
-- [ ] Connect IoT devices to WoogleNetIOT and verify isolation
-- [ ] Confirm WoogleNetGuest has internet access only
-- [ ] Test failover and resiliency for critical services
+The existing [Network upgrade.docx](Network%20upgrade.docx) contains an earlier UDM-Pro/Proxmox/`192.168.20.0/24` design. It conflicts with this README's UCG-Fiber/TrueNAS/`10.0.2.0/24` target; do not run its embedded script or apply its VLAN instructions until the topology and addressing decision is reconciled. The sprint plan documents the current working assumptions and the decisions still required.
 
 ---
 
