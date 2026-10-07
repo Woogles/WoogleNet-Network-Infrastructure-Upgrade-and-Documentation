@@ -1,0 +1,200 @@
+Project WoogleNet: Network Infrastructure Documentation
+
+This repository contains the architectural design, hardware inventory, and deployment walkthrough for the WoogleNet home environment.
+🌐 Network Architecture
+Current State
+
+    Primary Subnet: 10.0.0.1 / 255.255.0.0
+    Wireless: Two isolated SSIDs (WoogleNet and `WoogleNetDMZ**
+
+Future State (Target Configuration)
+
+To achieve the goal of three distinct but communicating production networks, the environment will move to a VLAN-based architecture.
+1. Production Environment (10.0.x.x)
+
+Communication is permitted between these three VLANs.
+Network	VLAN	IP Range	Purpose	Assignment
+Network 1	10	10.0.1.1 - 10.0.1.10	Management/HW	Static (Router, Switches, APs)
+Network 2	2**	10.0.2.10 - 10.0.2.99	Servers/Services	Static (TrueNAS) / Mixed (VMs/Containers)
+Network 3	30	10.0.3.100 - 10.0.3.254	Personal Devices	DHCP (Phones, Laptops, Desktops)
+
+    Wireless Access: WoogleNet (2.5GHz & 5GHz) →→ Maps to VLAN 30.
+
+2. IoT Environment (192.168.1.x)
+
+    Subnet: 192.168.1.1/24
+    Access: DHCP.
+    Security: Internet-only; no routing permitted to Production, Guest, or Management networks.
+    Wireless Access: WoogleNetIOT.
+
+3. Guest/DMZ Environment (192.168.2.x)
+
+    Subnet: 192.168.2.1/24
+    Access: DHCP.
+    Security: Internet-only.
+    Wireless Access: WoogleNetGuest.
+
+🛠 Hardware Inventory
+Network Gear
+Device	Model	Quantity	Role
+Gateway	UBNT Cloud Gateway Fiber (UCG-Fiber)	1	Primary Router/GW**
+Switch	UBNT 24 Port	2	Core/Distribution
+Switch	TPLINK 24 Port	2	Access/Edge
+AP	UAC-LR	3	General Coverage (Attic, Basement, Living Room)
+AP	UAC-Pro	3	High Density (Office, Game Room, TBD)
+AP	UAC External	1	Outdoor (Backyard)
+Compute Gear
+Hardware	OS	Quantity	Role
+Dell R72**	TrueNAS	4	Hypervisor / Storage Nodes
+📋 Software & Service Stack
+OS & Virtualization
+
+    Host OS: TrueNAS
+    Container Host: Ubuntu Server is utilized as a dedicated VM host to run Docker and Docker Compose for maximum flexibility and compatibility.
+
+Containers
+
+Deployed across the TrueNAS cluster or Ubuntu VMs using the naming convention [Server][App].
+
+    Media: Plex, TDARR, TMM
+    Knowledge/Docs: Wiki
+    Personal/Utility: Calibre, Immich, Vaultwarden, Tatuli
+
+Virtual Machines
+
+    DL: Download Manager
+    AD: Active Directory / Domain Controller
+    WEB: Web Server
+    PROXY: Reverse Proxy (Entry point for external access)
+
+📦 Docker on Ubuntu Setup
+Manual Installation Steps
+
+    Update the existing system packages.
+    Install prerequisite packages to allow apt to use a repository over HTTPS.
+    Add the official Docker GPG key for package verification.
+    Set up the stable Docker repository.
+    Install Docker Engine, CLI, and Docker Compose.
+    Add the current user to the docker group to avoid using sudo for every command.
+
+Automation Script
+
+Save the following as setup-docker.sh, make it executable with chmod +x setup-docker.sh, and run it as root.
+bash
+
+#!/bin/bash
+
+# WoogleNet Docker Installation Script for Ubuntu
+# Run as root or with sudo
+
+set -e
+
+echo "Updating system packages..."
+apt-get update && apt-get upgrade -y
+
+echo "Installing prerequisites..."
+apt-get install -y ca-certificates curl gnupg lsb-release
+
+echo "Adding Docker GPG key..."
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo "Setting up Docker repository..."
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+echo "Installing Docker Engine and Compose..."
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+echo "Configuring permissions for current user..."
+# Gets the user who called sudo
+SUDO_USER=${SUDO_USER:-$(whoami)}
+usermod -aG docker $SUDO_USER
+
+echo "Installation complete. Please log out and back in for group changes to take effect."
+docker --version
+docker compose version
+
+🏷 Naming Conventions
+
+Strict adherence to these conventions is required for DNS and management.
+Category	Convention	Example
+Servers	3-Letter Uppercase	DAX, MAX, JAX, PAX
+Containers	[Server Name][App]	DAXPlex, MAXImmich
+Net Hardware	WoogleNet[Function][ID/Model]	WoogleNetRouter, WoogleNetSwitch01
+Access Points	[Location]	UPSTAIRS, DOWNSTAIRS, MAIN**
+Personal	[Owner]_[Device]_[Model]	Eric_Phone_Pixel9, Eric_Desktop
+IoT	[Location]_[Function]_[Num]	Office_Light_1
+🗄 Rack Layout (42U)
+Unit	Component	Name/Details
+U1	Router/GW	WoogleNetRouter_R01**
+U2	Patch Panel	—
+U3	Switch	WoogleNetSwitch01**
+U4	Patch Panel	—
+U5	Switch	WoogleNetSwitch02**
+U6	Patch Panel	—
+U7	Switch	WoogleNetSwitch03**
+U8	Patch Panel	—
+U12	Monitor	System Console**
+U16	Shelf	Keyboard / Mouse
+U21	Shelf	Accessories
+U23	KVM	Management Console**
+U24-25	Server	DAX
+U26-27	Server	MAX**
+U28-29	Server	JAX
+U30-31	Server	`PAX**
+U32-39	UPS	Power Redundancy Array**
+⚙️ DNS Configuration
+Local DNS
+
+Handled by UBNT Gateway for internal routing and local hostname resolution.
+External DNS
+
+Recommended settings based on latency and privacy:
+Provider	Primary	Secondary	Notes
+Cloudflare	1.1.1.1	1.0.0.1	Fastest globally, high privacy
+Google	8.8.8.8	8.8.4.4	Extremely robust infrastructure
+Quad9	9.9.9.9	149.112.112.112	Security focused (blocks malicious)
+AdGuard	94.140.14.14	94.140.15.15	DNS-level ad blocking
+🚀 Setup Walkthrough
+Phase 1: Gateway & VLAN Core
+
+    Provision UCG-Fiber: Set up the primary gateway and configure the WAN interface.
+    Define VLANs:
+        Create VLAN 10 (Mgmt), 20 (Servers), 30 (Personal).
+        Create separate subnets for IoT (192.168.1.1) and Guest (192.168.2.1).
+    Firewall Rules:
+        Allow inter-VLAN routing for VLANs 10, 20, and 30.
+        Implement "Drop" rules for IoT and Guest VLANs to prevent access to any internal 10.0.x.x addresses.
+
+Phase 2: Switching & Wireless
+
+    Switch Adoption: Adopt all UBNT and TPLINK switches.
+    Port Assignment: Assign ports to specific VLANs based on the connected device (e.g., Server ports →→ VLAN 20).
+    Wireless SSID Mapping:
+        WoogleNet →→ VLAN 30
+        WoogleNetIOT →→ IoT Subnet
+        WoogleNetGuest →→ Guest Subnet
+    AP Placement: Deploy APs to designated locations (Attic, Basement, Living Room, Office, Game Room, Backyard**
+
+Phase 3: Compute & Services
+
+    Hardware Install: Mount Dell R720s in U24-U31.
+    TrueNAS Deploy: Install TrueNAS on all 4 nodes. Assign static IPs within the 10.0.2.x range.
+    Ubuntu Host Setup:
+        Provision Ubuntu VMs on TrueNAS nodes.
+        Run the setup-docker.sh script to prepare container environments.
+    Service Deployment:
+        Deploy VMs (AD, Proxy, Web, DL).
+        Deploy Containers according to the naming convention (e.g., DAXPlex).
+    Verification: Ensure the Proxy VM can route traffic to the containerized services.
+
+Phase 4: Client Onboarding
+
+    Personal Devices: Connect devices to WoogleNet and verify DHCP assignment in the 10.0.3.x range.
+    IoT Devices: Connect to WoogleNetIOT and verify they cannot ping the TrueNAS nodes.
+    Guest Access: Verify WoogleNetGuest provides internet access only.**
