@@ -1,0 +1,18 @@
+Configure the UDM-Pro: trusted 10.0.0.0/16, IoT VLAN 30, Guest VLAN 40, DHCP pool, and reservations for JAX .10 and SAX .11. The gateway is not configured yet.
+Provision JAX and SAX: replace JAX’s Proxmox install with Ubuntu, install Ubuntu on SAX, set each host’s actual NIC name, then run the network, Docker, and Tailscale setup.
+On JAX and SAX, validate and start their Compose stacks. Docker Compose wasn’t available on this Windows machine, so the stack configs still need compose-stack.sh validate on the hosts.
+Finish Sprint 2 on SAX: install NVIDIA drivers and Container Toolkit, fill in the GPU UUIDs and Tailnet IP in the AI .env, then test each Ollama endpoint and Open WebUI.
+Decide the NAS/export and download client. Those choices block the NFS setup, hardlink storage, and Sprint 4 media stack scripts.
+Build and deploy the Sprint 3 data-service stacks, Sprint 4 media stacks, and Sprint 5 Home Assistant/dashboard/monitoring setup. Then test backup/restore, alerts, and network isolation.
+Fix the repo’s own setup instructions before following them. The published network script is at scripts/setup_network.sh, but the README’s example calls ./setup_network.sh. The README also refers to a Docker installer that I couldn’t locate in the published tree. Resolve those paths and ensure there is a working Docker Engine and Compose v2 installation method before provisioning either host.
+Configure and verify the UDM-Pro. Back up the current configuration and establish a recovery path first. Then configure the trusted 10.0.0.0/16 network, IoT VLAN 30, Guest VLAN 40, DHCP range, and JAX/SAX reservations as specified in the plan. Configure Wi-Fi and switch port VLAN assignments, then test DHCP, DNS, internet access, and isolation from clients on each network. Keep JAX at 10.0.2.10 and SAX at 10.0.2.11, outside the proposed DHCP pool.
+Build the remaining stacks. Sprint 3 calls for BookStack, Vaultwarden, Nextcloud, and Paperless-ngx. Sprint 4 covers Prowlarr, Sonarr, Radarr, qbittorrnt, Plex, and Jellyfin. Sprint 5 covers Home Assistant, Homepage, and Uptime Kuma. The README’s wider inventory also names Immich, Audiobookshelf, Calibre, Navidrome, Syncthing, RomM, Tdarr, and TMM; the sprint plan doesn’t give all of those implementation tasks, so they need to be explicitly included or deferred.
+
+
+Review issues to fix or decide
+
+The README repeats the IoT VLAN row and duplicates a compose-stack.sh bullet.
+The README describes Guest as “DMZ”-style, while the sprint plan clarifies that Guest is an internet-only client network, not a server DMZ. Align the wording.
+Decide where Home Assistant will run—a dedicated host or Proxmox VM—and document the specific firewall flows needed for IoT control and Ollama access.
+Add repeatable validation to the repo. The helper checks Compose configuration and operates stacks, but I found no CI/test workflow in the published root listing; add shell syntax/lint checks and Compose validation for the checked-in manifests.
+
