@@ -1,0 +1,33 @@
+name: wooglenet-ops
+
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    restart: unless-stopped
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "${HOMEPAGE_ALLOWED_HOSTS:?Set HOMEPAGE_ALLOWED_HOSTS}"
+      PUID: "${PUID:?Set PUID}"
+      PGID: "${PGID:?Set PGID}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/homepage:/app/config:ro"
+    expose:
+      - "3000"
+    networks:
+      - foundation
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    restart: unless-stopped
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/uptime-kuma:/app/data"
+    expose:
+      - "3001"
+    networks:
+      - foundation
+
+networks:
+  foundation:
+    external: true
+    name: wooglenet-foundation

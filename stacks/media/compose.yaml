@@ -1,0 +1,111 @@
+name: wooglenet-media
+
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: JAXqBittorrent
+    restart: unless-stopped
+    environment:
+      PUID: "${PUID:?Set PUID in .env}"
+      PGID: "${PGID:?Set PGID in .env}"
+      TZ: "${TZ:-Etc/UTC}"
+      WEBUI_PORT: "8080"
+      TORRENTING_PORT: "6881"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/qbittorrent:/config"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT in .env}/data:/data"
+    expose:
+      - "8080"
+    ports:
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP in .env}:6881:6881/tcp"
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP in .env}:6881:6881/udp"
+    networks:
+      - foundation
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: JAXProwlarr
+    restart: unless-stopped
+    environment:
+      PUID: "${PUID:?Set PUID in .env}"
+      PGID: "${PGID:?Set PGID in .env}"
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/prowlarr:/config"
+    expose:
+      - "9696"
+    networks:
+      - foundation
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: JAXSonarr
+    restart: unless-stopped
+    environment:
+      PUID: "${PUID:?Set PUID in .env}"
+      PGID: "${PGID:?Set PGID in .env}"
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/sonarr:/config"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT in .env}/data:/data"
+    expose:
+      - "8989"
+    networks:
+      - foundation
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: JAXRadarr
+    restart: unless-stopped
+    environment:
+      PUID: "${PUID:?Set PUID in .env}"
+      PGID: "${PGID:?Set PGID in .env}"
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/radarr:/config"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT in .env}/data:/data"
+    expose:
+      - "7878"
+    networks:
+      - foundation
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: JAXPlex
+    restart: unless-stopped
+    environment:
+      PUID: "${PUID:?Set PUID in .env}"
+      PGID: "${PGID:?Set PGID in .env}"
+      TZ: "${TZ:-Etc/UTC}"
+      VERSION: "docker"
+      PLEX_CLAIM: "${PLEX_CLAIM:-}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/plex:/config"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT in .env}/data:/data:ro"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/plex-transcode:/transcode"
+    expose:
+      - "32400"
+    ports:
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP in .env}:32400:32400/tcp"
+    networks:
+      - foundation
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: JAXJellyfin
+    restart: unless-stopped
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/jellyfin/config:/config"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT in .env}/jellyfin/cache:/cache"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT in .env}/data:/data:ro"
+    expose:
+      - "8096"
+    networks:
+      - foundation
+
+networks:
+  foundation:
+    external: true
+    name: wooglenet-foundation

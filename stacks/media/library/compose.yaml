@@ -1,0 +1,178 @@
+name: wooglenet-library
+
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    restart: unless-stopped
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/audiobookshelf/config:/config"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/audiobookshelf/metadata:/metadata"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT}/data/audiobooks:/audiobooks:ro"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT}/data/podcasts:/podcasts"
+    expose:
+      - "80"
+    networks:
+      - foundation
+
+  calibre:
+    image: lscr.io/linuxserver/calibre:latest
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      PUID: "${PUID:?Set PUID}"
+      PGID: "${PGID:?Set PGID}"
+      TZ: "${TZ:-Etc/UTC}"
+      PASSWORD: "${CALIBRE_PASSWORD:?Set CALIBRE_PASSWORD}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/calibre:/config"
+    shm_size: "1gb"
+    expose:
+      - "8080"
+    networks:
+      - foundation
+
+  navidrome:
+    image: deluan/navidrome:latest
+    restart: unless-stopped
+    user: "${PUID:?Set PUID}:${PGID:?Set PGID}"
+    environment:
+      ND_LOGLEVEL: info
+      ND_SCANSCHEDULE: 1h
+      ND_MUSICFOLDER: /music
+      ND_DATAFOLDER: /data
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/navidrome:/data"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT}/data/music:/music:ro"
+    expose:
+      - "4533"
+    networks:
+      - foundation
+
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    restart: unless-stopped
+    hostname: JAX
+    environment:
+      PUID: "${PUID:?Set PUID}"
+      PGID: "${PGID:?Set PGID}"
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/syncthing:/config"
+      - "${SYNC_ROOT:?Set SYNC_ROOT}:/sync"
+    expose:
+      - "8384"
+    ports:
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP}:22000:22000/tcp"
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP}:22000:22000/udp"
+      - "${SERVER_LAN_IP:?Set SERVER_LAN_IP}:21027:21027/udp"
+    networks:
+      - foundation
+
+  romm:
+    image: rommapp/romm:latest
+    restart: unless-stopped
+    depends_on:
+      romm-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: romm-db
+      DB_NAME: romm
+      DB_USER: romm
+      DB_PASSWD: "${ROMM_DB_PASSWORD:?Set ROMM_DB_PASSWORD}"
+      ROMM_AUTH_SECRET_KEY: "${ROMM_AUTH_SECRET_KEY:?Set ROMM_AUTH_SECRET_KEY}"
+      HASHEOUS_API_ENABLED: "true"
+      # Optional metadata-provider credentials:
+      # IGDB_CLIENT_ID: "${IGDB_CLIENT_ID}"
+      # IGDB_CLIENT_SECRET: "${IGDB_CLIENT_SECRET}"
+    volumes:
+      - romm_resources:/romm/resources
+      - romm_redis_data:/redis-data
+      - "${ROMM_LIBRARY_ROOT:?Set ROMM_LIBRARY_ROOT}:/romm/library:ro"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/romm/assets:/romm/assets"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/romm/config:/romm/config"
+    expose:
+      - "8080"
+    networks:
+      - backend
+      - foundation
+
+  romm-db:
+    image: mariadb:lts
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: "${ROMM_DB_ROOT_PASSWORD:?Set ROMM_DB_ROOT_PASSWORD}"
+      MARIADB_DATABASE: romm
+      MARIADB_USER: romm
+      MARIADB_PASSWORD: "${ROMM_DB_PASSWORD:?Set ROMM_DB_PASSWORD}"
+    volumes:
+      - romm_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - backend
+
+  tdarr:
+    image: ghcr.io/haveagitgat/tdarr:latest
+    restart: unless-stopped
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
+      PUID: "${PUID:?Set PUID}"
+      PGID: "${PGID:?Set PGID}"
+      UMASK_SET: "002"
+      serverIP: "0.0.0.0"
+      serverPort: "8266"
+      webUIPort: "8265"
+      internalNode: "true"
+      inContainer: "true"
+      ffmpegVersion: "7"
+      nodeName: "JAX-Internal"
+      auth: "false"
+      openBrowser: "false"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/tdarr/server:/app/server"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/tdarr/configs:/app/configs"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/tdarr/logs:/app/logs"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT}/data:/media"
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/tdarr/transcode-cache:/temp"
+    expose:
+      - "8265"
+      - "8266"
+    networks:
+      - foundation
+
+  tinymediamanager:
+    image: tinymediamanager/tinymediamanager:latest
+    restart: unless-stopped
+    environment:
+      USER_ID: "${PUID:?Set PUID}"
+      GROUP_ID: "${PGID:?Set PGID}"
+      TZ: "${TZ:-Etc/UTC}"
+      PASSWORD: "${TMM_PASSWORD:?Set TMM_PASSWORD}"
+      ALLOW_DIRECT_VNC: "false"
+      LC_ALL: "en_US.UTF-8"
+      LANG: "en_US.UTF-8"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/tinymediamanager:/data"
+      - "${MEDIA_ROOT:?Set MEDIA_ROOT}/data/media:/media:rw"
+    expose:
+      - "4000"
+    networks:
+      - foundation
+
+volumes:
+  romm_db_data:
+  romm_resources:
+  romm_redis_data:
+
+networks:
+  backend:
+  foundation:
+    external: true
+    name: wooglenet-foundation

@@ -1,0 +1,174 @@
+name: wooglenet-services
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    environment:
+      DOMAIN: "${VAULTWARDEN_URL:?Set VAULTWARDEN_URL}"
+      SIGNUPS_ALLOWED: "false"
+      WEBSOCKET_ENABLED: "true"
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/vaultwarden:/data"
+    expose:
+      - "80"
+      - "3012"
+    networks:
+      - foundation
+
+  nextcloud-db:
+    image: mariadb:lts
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      MARIADB_DATABASE: nextcloud
+      MARIADB_USER: nextcloud
+      MARIADB_PASSWORD: "${NEXTCLOUD_DB_PASSWORD:?Set NEXTCLOUD_DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${NEXTCLOUD_DB_ROOT_PASSWORD:?Set NEXTCLOUD_DB_ROOT_PASSWORD}"
+    volumes:
+      - nextcloud_db:/var/lib/mysql
+    networks:
+      - backend
+
+  nextcloud-redis:
+    image: redis:alpine
+    restart: unless-stopped
+    volumes:
+      - nextcloud_redis:/data
+    networks:
+      - backend
+
+  nextcloud:
+    image: nextcloud:apache
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-db
+      - nextcloud-redis
+    environment:
+      MYSQL_HOST: nextcloud-db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: "${NEXTCLOUD_DB_PASSWORD:?Set NEXTCLOUD_DB_PASSWORD}"
+      REDIS_HOST: nextcloud-redis
+      NEXTCLOUD_ADMIN_USER: "${NEXTCLOUD_ADMIN_USER:?Set NEXTCLOUD_ADMIN_USER}"
+      NEXTCLOUD_ADMIN_PASSWORD: "${NEXTCLOUD_ADMIN_PASSWORD:?Set NEXTCLOUD_ADMIN_PASSWORD}"
+      NEXTCLOUD_TRUSTED_DOMAINS: "${SERVER_LAN_IP:?Set SERVER_LAN_IP} ${NEXTCLOUD_HOST:?Set NEXTCLOUD_HOST}"
+      OVERWRITEHOST: "${NEXTCLOUD_HOST:?Set NEXTCLOUD_HOST}"
+      OVERWRITEPROTOCOL: https
+      OVERWRITECLIURL: "https://${NEXTCLOUD_HOST:?Set NEXTCLOUD_HOST}"
+      TZ: "${TZ:-Etc/UTC}"
+    volumes:
+      - nextcloud_html:/var/www/html
+    expose:
+      - "80"
+    networks:
+      - backend
+      - foundation
+
+  nextcloud-cron:
+    image: nextcloud:apache
+    restart: unless-stopped
+    entrypoint: /cron.sh
+    depends_on:
+      - nextcloud
+    volumes:
+      - nextcloud_html:/var/www/html
+    networks:
+      - backend
+
+  paperless-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: "${PAPERLESS_DB_PASSWORD:?Set PAPERLESS_DB_PASSWORD}"
+    volumes:
+      - paperless_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperless -d paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  paperless-broker:
+    image: valkey/valkey:9-alpine
+    restart: unless-stopped
+    volumes:
+      - paperless_broker:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
+  paperless-gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: unless-stopped
+    command:
+      - gotenberg
+      - --chromium-disable-javascript=true
+      - --chromium-allow-list=file:///tmp/.*
+    networks:
+      - backend
+
+  paperless-tika:
+    image: apache/tika:3.3.1.0
+    restart: unless-stopped
+    networks:
+      - backend
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      paperless-db:
+        condition: service_healthy
+      paperless-broker:
+        condition: service_healthy
+      paperless-gotenberg:
+        condition: service_started
+      paperless-tika:
+        condition: service_started
+    environment:
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: paperless-db
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperless
+      PAPERLESS_DBPASS: "${PAPERLESS_DB_PASSWORD:?Set PAPERLESS_DB_PASSWORD}"
+      PAPERLESS_REDIS: redis://paperless-broker:6379
+      PAPERLESS_SECRET_KEY: "${PAPERLESS_SECRET_KEY:?Set PAPERLESS_SECRET_KEY}"
+      PAPERLESS_URL: "${PAPERLESS_URL:?Set PAPERLESS_URL}"
+      PAPERLESS_TIME_ZONE: "${TZ:-Etc/UTC}"
+      PAPERLESS_OCR_LANGUAGE: eng
+      PAPERLESS_TIKA_ENABLED: "1"
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://paperless-gotenberg:3000
+      PAPERLESS_TIKA_ENDPOINT: http://paperless-tika:9998
+    volumes:
+      - "${APPDATA_ROOT:?Set APPDATA_ROOT}/paperless/data:/usr/src/paperless/data"
+      - "${DOCUMENTS_ROOT:?Set DOCUMENTS_ROOT}/paperless/media:/usr/src/paperless/media"
+      - "${DOCUMENTS_ROOT:?Set DOCUMENTS_ROOT}/paperless/export:/usr/src/paperless/export"
+      - "${DOCUMENTS_ROOT:?Set DOCUMENTS_ROOT}/paperless/consume:/usr/src/paperless/consume"
+    expose:
+      - "8000"
+    networks:
+      - backend
+      - foundation
+
+volumes:
+  nextcloud_db:
+  nextcloud_redis:
+  nextcloud_html:
+  paperless_db:
+  paperless_broker:
+
+networks:
+  backend:
+  foundation:
+    external: true
+    name: wooglenet-foundation
