@@ -16,3 +16,232 @@ The README describes Guest as “DMZ”-style, while the sprint plan clarifies t
 Decide where Home Assistant will run—a dedicated host or Proxmox VM—and document the specific firewall flows needed for IoT control and Ollama access.
 Add repeatable validation to the repo. The helper checks Compose configuration and operates stacks, but I found no CI/test workflow in the published root listing; add shell syntax/lint checks and Compose validation for the checked-in manifests.
 
+1. A Global Environment File (.env.example)
+
+The Gotcha: Without this, the AI will ask you "What is the IP of JAX?" or "What is the NAS path?" fifty times. If you change an IP, you'll have to hunt through ten different YAML files to fix it.
+
+The Solution: Create a .env.example file. When you start, you'll copy it to .env. The AI will then simply say, "Update the NAS_PATH variable in your .env file," ensuring consistency across every single container.
+
+    What to include:
+        DOMAIN_NAME=home.arpa
+        NAS_IP=10.0.x.x
+        NAS_EXPORT_PATH=/mnt/pool/appdata
+        TRUSTED_VLAN_ID=10
+        IOT_VLAN_ID=30
+
+./.env.example
+
+This is the "Source of Truth." I want this to be a global env file that can be referenced with the IPs and infomration to automate this process the example is in that folder already
+
+2. A System Audit Script (audit_system.sh)
+
+The Gotcha: Since the AI is a "Consultant" and cannot see your screen, it often assumes a package is installed or a folder exists when it isn't. This leads to "Command not found" errors.
+
+The Solution: A simple bash script that collects the current state of the machine and outputs it to a text file. You run this, paste the output to the AI, and it knows exactly what it's working with.
+
+    What it should check:
+        docker --version and docker compose version
+        ip a (to verify VLAN tagging)
+        df -h (to verify the NAS is actually mounted)
+        uptime and free -m (to ensure the host isn't swapping)
+
+scripts/audit_system.sh
+This will provide an audit that will determine exactly what is installed, how much RAM is left, and if the NAS is actually connected.
+
+3. A Connectivity Test Suite (test_network.sh)
+
+The Gotcha: The most frustrating part of home-labbing is deploying an app, seeing it "fail," and realizing it's not the app—it's a UDM-Pro firewall rule blocking the port.
+
+The Solution: A script that performs a "Pre-Flight Check" before the AI deploys any app. It should test the "plumbing" first.
+
+    What it should test:
+        Can JAX ping the NAS?
+        Is port 80/443 open on the NPM host?
+        Can a device on the IoT VLAN reach the Gateway but not the NAS? (Validation of security).
+
+scripts/test_network.sh
+This script checks the "plumbing." If this script fails, you know the problem is in the UDM-Pro or Proxmox settings, not the AI's Docker code.
+
+4. A Storage Manifest (storage_map.md)
+
+The Gotcha: Over time, you forget which folder on the NAS belongs to which app. If the AI suggests a path like /mnt/nas/nextcloud, but you actually named it /mnt/nas/cloud_data, the app will fail to start or lose data.
+
+The Solution: A simple Markdown table that acts as the "Source of Truth" for data mapping.
+
+    Example Format:
+        Service: Immich →→ NAS Path: /vol1/photos →→ `Container Path: /usr/src/app/upload
+        Service: Vaultwarden →→ NAS Path: /vol1/vault →→ Container Path: /data
+
+./sstorage_map.md
+Create this as a Markdown file in the root of your repo. This prevents the AI from suggesting random folder names. There is an example already placed in the root 
+
+5. A "Kill-Switch" / Rollback Script (cleanup_stack.sh)
+
+The Gotcha: If the AI gives you a Docker Compose file that is slightly wrong, it can leave "orphaned" containers or volumes that conflict with the next attempt, leading to the dreaded Bind for 0.0.0.0:80 failed: port is already allocated.
+
+The Solution: A script that can cleanly wipe a specific stack and its associated temporary networks without touching your NAS data. This allows you to "reset and try again" instantly when the AI provides a corrected version of a file.
+Summary of the new Repo Structure
+
+scripts/cleanup_stack.sh
+This is the "Undo" button.
+
+If you add these, your Git repo will look like this:
+text
+
+/WoogleNet...
+  ├── /docs (Current documentation)
+  ├── /scripts
+  │   ├── compose-stack.sh (Existing)
+  │   ├── audit_system.sh    <-- NEW
+  │   ├── test_network.sh    <-- NEW
+  │   └── cleanup_stack.sh   <-- NEW
+  ├── .env.example           <-- NEW
+  └── storage_map.md         <-- NEW
+
+AI Deployment Strategy
+
+Since the foundation (Proxmox, NAS, and Ubuntu hosts) will be ready, here is the refined operational plan for your Local AI.
+Updated Master System Prompt
+
+(Use this when you are ready to start the configuration phase)
+
+    You are the WoogleNet Orchestrator. The hardware is provisioned, Proxmox is installed, and the NAS is live. Your sole purpose is to configure the software layer for maximum simplicity and security.
+
+    Current Environment:
+
+        Gateway: UDM-Pro.
+        Compute: Proxmox Cluster (DAX, MAX, PAX) and Ubuntu hosts (JAX, SAX).
+        Storage: Proxmox-based NAS (ready for NFS/SMB shares).
+		
+		"I have implemented a **Global .env** for infrastructure variables (IPs, VLANs, and NAS_BASE_PATH). When generating or editing service-specific .env files or Docker Compose YAMLs, **do not hardcode paths or IPs**. Instead, use the variable syntax (e.g., ${NAS_BASE_PATH}/service_name) so that the configuration remains portable across JAX, SAX, and the Proxmox cluster."
+
+    Strict Constraints:
+
+        Zero Cost: Use only free tiers (Tailscale Personal, Open Source software).
+        Security: No open WAN ports. All admin traffic via Tailscale.
+        User Experience: Non-technical users must never see an IP address or a port number. Every service must be mapped to a friendly local DNS name (e.g., service.home).
+
+        Deployment: Use the compose-stack.sh helper for all Docker deployments.
+
+    Your Task:
+    Provide the exact Docker Compose YAMLs, AdGuard DNS rewrite rules, and Nginx Proxy Manager (NPM) configurations.
+
+    Order of Operations:
+
+        Configure Network/VLANs on UDM-Pro.
+        Deploy AdGuard Home →→ Setup Local DNS Domain.
+        Deploy Nginx Proxy Manager →→ Map friendly names to internal ports.
+        Deploy the Application Stack (Nextcloud, Immich, etc.) using the NAS for persistent storage.
+        Configure the "Homepage" dashboard as the single entry point for users.
+
+Updated Agent Workflow
+
+    The Mapping Phase: The AI will first generate a "Service Map" (a table) listing every app, its intended internal IP, its port, and the "Friendly Name" the users will use.
+    The Storage Phase: The AI will provide the exact Linux commands to mount your Proxmox NAS shares onto JAX and SAX so the Docker containers have a place to save data.
+    The Connectivity Phase: The AI will guide you through the UDM-Pro firewall rules to ensure the IoT VLAN can't talk to your NAS, but your Trusted LAN can.
+    The "Handover" Phase: The AI will help you configure the Homepage dashboard. You will give your users one single link (e.g., http://home.home), and they will see a beautiful grid of icons for all their apps.
+
+
+
+
+
+
+
+Why a DNS Domain helps (The "Usability" Factor)
+
+You asked how a DNS domain would help. For your non-technical users, this is the difference between a "professional" experience and a "technical" one.
+
+Without a local DNS domain:
+Your users have to remember IP addresses and port numbers. To check their photos, they have to type:
+http://10.0.2.15:2283
+If the IP changes or the port is confusing, they will call you for help every time.
+
+With a local DNS domain (e.g., woogle.net or home.arpa):
+You use AdGuard Home (which is in your plan) to create a "DNS Rewrite." You tell AdGuard: "Whenever someone types photos.home, send them to 10.0.2.15." Then, Nginx Proxy Manager (NPM) handles the port.
+The user simply types:
+http://photos.home
+
+The Benefits:
+
+    Zero Memory Load: Users only need to remember a word, not a string of numbers.
+    Consistency: If you move the "Photos" service from one server to another, you only change the IP in one place (AdGuard), and the user's link (photos.home) never changes.
+    Cleanliness: It removes the need for :8080 or :2283 at the end of every URL.
+
+Recommendation: Use .home.arpa (the official standard for home networks) or a custom one like .woogle. Since this is internal and not on the public internet, you don't need to buy anything; you just "declare" it in AdGuard.
+Level 1: The "Consultant" (Zero Access) — Recommended
+
+In this model, the AI has no technical access to your servers, router, or NAS. It operates purely as a high-level architect.
+
+    How it works: You describe the current state →→ The AI provides the exact command or YAML file →→ You copy and paste it into the terminal.
+    Privilege Level: Zero.
+    Security: Maximum. The AI cannot "go rogue" or make a mistake that affects your hardware because there is a "Human-in-the-Loop" (you) acting as the firewall.
+    What the AI needs: It only needs the text files from your Git repos and the output of commands you run (e.g., you run ip a, copy the result, and paste it into the chat).
+
+Level 2: The "Operator" (Restricted Agent Access)
+
+If you use n8n or a similar agent framework and want the AI to actually deploy the changes, you must create a "sandbox" for it. Do not give the AI your root password or a full sudoer account.
+
+If you go this route, apply these three restrictions:
+
+    Dedicated Service Account: Create a specific user for the AI (e.g., ai-deploy). Do not use your primary admin account.
+    Restricted Sudo: Instead of giving the AI full sudo access, edit the /etc/sudoers file to allow the ai-deploy user to only run specific commands (e.g., docker compose up, systemctl restart nginx).
+    The "Confirmation Gate": If using n8n, do not let the AI trigger a "Shell Execute" node automatically. Set up a "Wait for Approval" node where the AI presents the command it wants to run, and you must click "Approve" before it executes.
+
+Comparison Summary
+Feature	Level 1: Consultant	Level 2: Operator
+Access to SSH	None	Dedicated ai-deploy user
+Ability to Run Code	None (You do it)	Restricted →
+→ Human Approval
+Risk of "Hallucination"	Low (You catch it)	Medium (Could break a config)
+Effort for You	Higher (Copy/Paste)	Lower (Automated)
+Security Profile	Air-gapped logic	Controlled execution
+Final Verdict for WoogleNet
+
+Because you are building a network specifically designed for security and simplicity, I strongly recommend Level 1 (The Consultant).
+
+The "cost" is that you have to copy and paste commands, but the "gain" is the absolute certainty that no AI error can accidentally wipe your NAS or open a hole in your UDM-Pro firewall. The AI provides the "recipe," and you remain the "chef."
+
+
+Some potnetial issues with the design that need to be addressed 
+1. The "Single Point of Failure" (The JAX Problem)
+
+In your current plan, JAX is the brain. It handles DNS (AdGuard) and the Proxy (NPM).
+
+    The Risk: If the JAX host crashes or has a disk failure, your non-technical users won't just lose one app—they will lose everything, including the ability to resolve google.com because DNS is down.
+    The Low-Cost Fix:
+        AdGuard Home Secondary: Deploy a second, tiny AdGuard instance on SAX. In the UDM-Pro DHCP settings, you can list two DNS servers. If JAX goes down, the network stays online.
+        Configuration Sync: Use a simple rsync or a Git-based backup of your AdGuard and NPM configs so you can restore them to another host in minutes.
+
+2. The "Silent Failure" (Monitoring)
+
+Right now, you will only know a service is down when a user tells you, "The photos app isn't working." For a "pro" feel, you need to know before they do.
+
+    The Recommendation: Deploy Uptime Kuma.
+        What it is: A free, self-hosted monitoring tool with a beautiful dashboard.
+        Why it fits: It pings your services (and your NAS) every 60 seconds. If something goes down, it can send you a notification (via Discord, Telegram, or Gotify—all free).
+        Usability: You can add an "Uptime" link to your Homepage dashboard so users can see if "The System" is having issues before they complain.
+
+3. The "Maintenance Debt" (Auto-Updates)
+
+Updating 10+ Docker containers across multiple hosts (JAX, SAX, Proxmox) becomes a chore very quickly. You will either forget to update (creating security holes) or spend every Saturday doing it manually.
+
+    The Recommendation: Deploy Watchtower.
+        What it is: A lightweight container that monitors your other containers. When a new version of an image (like Nextcloud) is released, Watchtower automatically pulls the new image and restarts the container.
+        The Security Catch: Only use Watchtower for "stable" apps. For critical apps (like Vaultwarden), configure Watchtower to only notify you that an update is available, so you can update those manually after a backup.
+
+4. The "Last Mile" of Usability (mDNS/Bonjour)
+
+You've solved the DNS problem with AdGuard, but there is a "hidden" frustration in home networks: Printers and Casting.
+
+    The Gotcha: Devices like iPhones (AirPrint) or Chromecasts use mDNS (Multicast DNS), which typically does not cross VLAN boundaries. If your user is on the "Trusted LAN" and the printer is on the "IoT VLAN," they might not "see" it, even if the firewall allows the traffic.
+    The Fix: Ensure the mDNS Reflector/Repeater is enabled on your UDM-Pro. This allows the "discovery" packets to jump between your VLANs so the non-technical user's phone can find the printer without them needing to type in an IP address.
+
+Summary Checklist for your Local AI
+
+When you begin the build, add these to the AI's "To-Do" list:
+
+    Redundancy: Setup secondary DNS on SAX.
+    Observability: Deploy Uptime Kuma for service monitoring.
+    Maintenance: Deploy Watchtower for automated (selective) updates.
+    Discovery: Configure UDM-Pro mDNS for cross-VLAN device discovery.
+    Documentation: Tell the AI to update the storage_map.md and .env as "As-Built" documentation once the services are actually live.
