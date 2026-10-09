@@ -38,6 +38,15 @@ This document acts as the base operating reference for the environment and will 
 - WoogleNetIOT → VLAN 30, 192.168.1.0/24
 - WoogleNetGuest → VLAN 40, 192.168.2.0/24
 
+Switching: TP-Link TL-SG1024DE configured for 802.1Q VLAN tagging.
+Uplinks: 1GbE Single-link (LACP not supported by TL-SG1024DE).
+External Access Strategy:
+
+- Primary: Tailscale for administrative and private access.
+-  Selective: Port Forwarding (UDM-Pro) →→ NPM →→ Service (Plex).
+- Secondary: Cloudflare Tunnels for public-facing web services.
+
+
 ---
 
 ## Technical Architecture Diagram
@@ -237,6 +246,20 @@ Use this project as a foundation for:
 - service naming consistency
 - deployment verification
 - future home-lab expansion
+
+Compute & Storage Updates
+
+- SAX (GPU Node): Maintained as Bare Metal due to 3-slot GPU physical dimensions and thermal requirements.
+- Storage: R720 Cluster running Proxmox with a virtualized NAS instance.
+
+Service Redundancy & Power
+
+- DNS: High-Availability pair.
+ - Primary: AdGuard Home (JAX).
+ - Secondary: AdGuard Home (MAX or PAX).
+- Power Management: Implement NUT (Network UPS Tools) on a dedicated container.
+ - UPS Units: 3x Eaton/Tripp Lite, 2x APC.
+ - Logic: NUT Master monitors UPS →→ NUT Slaves (Proxmox nodes) trigger graceful shutdown at 20% battery.
 
 ---
 
