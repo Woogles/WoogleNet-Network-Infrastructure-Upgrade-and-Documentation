@@ -1,0 +1,5 @@
+.env
+
+config/.storage
+config/backups
+config/home-assistant.log*

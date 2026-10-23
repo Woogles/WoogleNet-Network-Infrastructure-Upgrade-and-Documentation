@@ -1,0 +1,27 @@
+- Administration:
+
+    - GitHub:
+        - abbr: GH
+          href: https://github.com
+
+    - Docker Hub:
+        - abbr: DH
+          href: https://hub.docker.com
+
+    - Proxmox:
+        - abbr: PX
+          href: https://pax.local:8006
+
+- Documentation:
+
+    - BookStack:
+        - abbr: BS
+          href: https://bookstack.local
+
+    - Nextcloud:
+        - abbr: NC
+          href: https://nextcloud.local
+
+    - Paperless:
+        - abbr: PL
+          href: https://paperless.local

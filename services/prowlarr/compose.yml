@@ -1,0 +1,31 @@
+services:
+
+  prowlarr:
+    container_name: ${CONTAINER_NAME}
+
+    image: lscr.io/linuxserver/prowlarr:${IMAGE_TAG}
+
+    restart: unless-stopped
+
+    network_mode: "service:gluetun"
+
+    depends_on:
+      - gluetun
+
+    ports:
+      - "${HTTP_PORT}:9696"
+
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+
+    volumes:
+      - ${CONFIG_PATH}:/config
+
+    networks:
+      - wooglenet
+
+networks:
+  wooglenet:
+    external: true

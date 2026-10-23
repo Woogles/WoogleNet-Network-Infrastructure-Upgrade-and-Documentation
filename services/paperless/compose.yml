@@ -1,0 +1,129 @@
+services:
+
+  redis:
+
+    container_name: ${REDIS_CONTAINER_NAME}
+
+    image: redis:${REDIS_IMAGE_TAG}
+
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --save
+      - "60"
+      - "1"
+
+    volumes:
+      - ${REDIS_DATA_PATH}:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - wooglenet
+
+  postgres:
+
+    container_name: ${POSTGRES_CONTAINER_NAME}
+
+    image: postgres:${POSTGRES_IMAGE_TAG}
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER}"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - wooglenet
+
+  paperless:
+
+    container_name: ${CONTAINER_NAME}
+
+    image: ghcr.io/paperless-ngx/paperless-ngx:${IMAGE_TAG}
+
+    restart: unless-stopped
+
+    depends_on:
+
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    environment:
+
+      PAPERLESS_REDIS: redis://redis:6379
+
+      PAPERLESS_DBHOST: postgres
+
+      PAPERLESS_DBNAME: ${POSTGRES_DB}
+
+      PAPERLESS_DBUSER: ${POSTGRES_USER}
+
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD}
+
+      PAPERLESS_URL: ${PAPERLESS_URL}
+
+      PAPERLESS_TIME_ZONE: ${TZ}
+
+      PAPERLESS_OCR_LANGUAGE: eng
+
+    ports:
+      - "${HTTP_PORT}:8000"
+
+    volumes:
+      - ${DATA_PATH}:/usr/src/paperless/data
+      - ${MEDIA_PATH}:/usr/src/paperless/media
+      - ${EXPORT_PATH}:/usr/src/paperless/export
+      - ${CONSUME_PATH}:/usr/src/paperless/consume
+
+    security_opt:
+      - no-new-privileges:true
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:8000"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - wooglenet
+
+networks:
+
+  wooglenet:
+    external: true

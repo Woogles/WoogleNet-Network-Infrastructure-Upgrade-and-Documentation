@@ -1,0 +1,9 @@
+.env
+
+html/
+
+data/
+
+postgres/
+
+redis/

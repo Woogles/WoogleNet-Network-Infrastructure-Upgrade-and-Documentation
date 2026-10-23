@@ -1,0 +1,31 @@
+title: WoogleNet
+
+theme: dark
+
+color: slate
+
+headerStyle: boxedWidgets
+
+layout:
+  Infrastructure:
+    style: row
+    columns: 3
+
+  Monitoring:
+    style: row
+    columns: 2
+
+  Core Services:
+    style: row
+    columns: 3
+
+  Knowledge Platform:
+    style: row
+    columns: 3
+
+  Media Platform:
+    style: row
+    columns: 3
+
+providers:
+  openweathermap: false

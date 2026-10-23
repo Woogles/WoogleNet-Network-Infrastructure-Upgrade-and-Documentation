@@ -1,0 +1,100 @@
+- Infrastructure:
+
+    - AdGuard Primary:
+        href: https://adguard.local
+        description: Primary DNS Service
+        icon: adguard-home.png
+        server: my-docker
+        container: adguard-primary
+
+    - AdGuard Secondary:
+        href: https://adguard-secondary.local
+        description: Secondary DNS Service
+
+    - OpenMediaVault:
+        href: https://omv.local
+        description: Storage Platform
+
+- Monitoring:
+
+    - Homepage:
+        href: https://homepage.local
+        description: Operations Dashboard
+        icon: homepage.png
+        server: my-docker
+        container: homepage
+
+    - Uptime Kuma:
+        href: https://uptime-kuma.local
+        description: Monitoring Platform
+
+- Core Services:
+
+    - Vaultwarden:
+        href: https://vaultwarden.local
+        description: Password Management
+        icon: vaultwarden.png
+        server: my-docker
+        container: vaultwarden
+
+    - Home Assistant:
+        href: https://homeassistant.local
+        description: Home Automation
+
+- Knowledge Platform:
+
+    - Paperless-ngx:
+        href: https://paperless.local
+        description: Document Management
+
+    - Nextcloud:
+        href: https://nextcloud.local
+        description: Knowledge Repository
+
+    - BookStack:
+        href: https://bookstack.local
+        description: Documentation Platform
+
+- Media Platform:
+
+    - Immich:
+        href: https://immich.local
+        description: Photo Management
+
+    - Audiobookshelf:
+        href: https://audiobookshelf.local
+        description: Audiobooks
+
+    - Navidrome:
+        href: https://navidrome.local
+        description: Music Streaming
+
+    - Plex:
+        href: https://plex.local
+        description: Media Streaming
+
+- Media Automation:
+
+    - Sonarr:
+        href: https://sonarr.local
+
+    - Radarr:
+        href: https://radarr.local
+
+    - Lidarr:
+        href: https://lidarr.local
+
+    - Readarr:
+        href: https://readarr.local
+
+    - Bazarr:
+        href: https://bazarr.local
+
+    - Overseerr:
+        href: https://overseerr.local
+
+    - Prowlarr:
+        href: https://prowlarr.local
+
+    - qBittorrent:
+        href: https://qbittorrent.local

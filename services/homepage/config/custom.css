@@ -1,0 +1,11 @@
+:root {
+    --card-radius: 12px;
+}
+
+.service-card {
+    border-radius: var(--card-radius);
+}
+
+.group-header {
+    font-weight: 700;
+}
