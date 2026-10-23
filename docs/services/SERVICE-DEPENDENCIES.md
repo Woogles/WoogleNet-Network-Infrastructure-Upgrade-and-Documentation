@@ -1,362 +1,714 @@
-# Service Dependencies
+# SERVICE-DEPENDENCIES
 
 ## Purpose
 
-This document serves as the authoritative dependency map for all approved WoogleNet services.
+This document serves as the authoritative dependency map for all services operating within the WoogleNet environment.
 
-The goals of this document are:
+The purpose of this document is to:
 
-- Identify critical dependencies
+- Document service relationships
+- Identify operational dependencies
 - Support troubleshooting
 - Support recovery planning
-- Establish startup order
-- Establish recovery order
-- Support monitoring design
-- Reduce service coupling surprises
+- Support disaster recovery operations
+- Support operational readiness reviews
+- Support certification activities
+
+This document answers:
+
+> What services depend on other services to operate correctly?
 
 Reference Documents:
 
 - ARCHITECTURE.md
-- NETWORK-TOPOLOGY.md
 - SERVICE-INVENTORY.md
-- DNS-ARCHITECTURE.md
 - DISASTER-RECOVERY.md
+- RECOVERY-TIME-OBJECTIVES.md
+- service-readiness-matrix.md
 
 ---
 
-# Dependency Hierarchy
+# Dependency Classification
 
+## Critical Dependency
+
+Service cannot function without the dependency.
+
+Examples:
+
+- Immich → Database
+- Nextcloud → Storage
+
+---
+
+## Required Dependency
+
+Service functionality is significantly degraded without the dependency.
+
+Examples:
+
+- Homepage → DNS
+- Uptime Kuma → DNS
+
+---
+
+## Optional Dependency
+
+Service remains functional but loses enhanced capabilities.
+
+Examples:
+
+- Services → Homepage
+- Services → Tautulli
+
+---
+
+# Infrastructure Dependency Stack
+
+All services ultimately depend upon the following infrastructure chain:
+
+```text
 Internet
-↓
+    ↓
 UDM-Pro
-↓
-Network Infrastructure
-↓
+    ↓
+Switching Infrastructure
+    ↓
 DNS
-↓
-Storage
-↓
-Core Services
-↓
+    ↓
+Storage Platform
+    ↓
 Application Services
+```
+
+Infrastructure recovery follows the same order.
+
+Reference:
+
+DISASTER-RECOVERY.md
 
 ---
 
 # Core Infrastructure Dependencies
 
-## Network
+## AdGuard Primary
 
-Required By:
+Host:
 
-- DNS
-- Storage
-- Monitoring
+```text
+DAX
+```
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| DAX | Critical |
+| Network Connectivity | Critical |
+| Upstream DNS Providers | Required |
+
+Supports:
+
+- All Infrastructure Hosts
 - All Application Services
-
-Components:
-
-- UDM-Pro
-- TP-Link Switches
-- Access Points
-
-Failure Impact:
-
-Environment-wide outage.
-
-Criticality:
-
-Critical
+- Client Name Resolution
 
 ---
 
-## DNS
+## AdGuard Secondary
 
-Components:
+Host:
 
-- AdGuard Primary
-- AdGuard Secondary
+```text
+MAX
+```
 
-Dependent Services:
+Depends On:
 
-- OpenMediaVault
-- Homepage
-- Uptime Kuma
-- Home Assistant
-- Vaultwarden
-- Immich
-- Nextcloud
-- Paperless
-- BookStack
-- ARR Stack
-- Navidrome
+| Dependency | Type |
+|------------|------------|
+| MAX | Critical |
+| Network Connectivity | Critical |
+| Upstream DNS Providers | Required |
 
-Failure Impact:
+Supports:
 
-High
-
-Criticality:
-
-Critical
+- Redundant DNS Services
 
 ---
-
-## Storage
-
-Components:
-
-- OpenMediaVault
-- SMB Shares
-- Backup Repository
-
-Dependent Services:
-
-- Immich
-- Audiobookshelf
-- Plex
-- Home Assistant
-- Vaultwarden
-- Paperless
-- Nextcloud
-- BookStack
-- ARR Stack
-- Navidrome
-
-Failure Impact:
-
-High
-
-Criticality:
-
-Critical
-
----
-
-# Core Services
 
 ## Homepage
 
-Dependencies:
+Host:
 
-- DNS
-- Network
+```text
+DAX
+```
 
-Used By:
+Depends On:
 
-- Administrators
+| Dependency | Type |
+|------------|------------|
+| DNS Resolution | Required |
+| DAX | Critical |
 
-Failure Impact:
+Supports:
 
-Low
+- Administrative Visibility
 
 ---
 
 ## Uptime Kuma
 
-Dependencies:
+Host:
 
-- DNS
-- Network
+```text
+DAX
+```
 
-Used By:
+Depends On:
 
-- Administrators
+| Dependency | Type |
+|------------|------------|
+| DNS Resolution | Required |
+| Email Notifications | Optional |
+| DAX | Critical |
 
-Failure Impact:
+Supports:
 
-Low
-
----
-
-# Media Services
-
-## Plex
-
-Dependencies:
-
-- DNS
-- Storage
-- Network
-
-Recovery Priority:
-
-3
+- Availability Monitoring
+- Alerting
+- Service Health Visibility
 
 ---
 
-## Immich
+## Tailscale
 
-Dependencies:
+Host:
 
-- DNS
-- Storage
-- Network
-- Database
+```text
+All Hosts
+```
 
-Recovery Priority:
+Depends On:
 
-1
+| Dependency | Type |
+|------------|------------|
+| Internet Connectivity | Required |
+| Tailscale Control Plane | Required |
 
----
+Supports:
 
-## Audiobookshelf
-
-Dependencies:
-
-- DNS
-- Storage
-- Network
-
-Recovery Priority:
-
-2
-
----
-
-# Automation Services
-
-## Home Assistant
-
-Dependencies:
-
-- DNS
-- Network
-- Storage
-
-Recovery Priority:
-
-1
+- Secure Remote Access
+- Administrative Connectivity
 
 ---
 
 ## Vaultwarden
 
-Dependencies:
+Host:
 
-- DNS
-- Network
-- Storage
+```text
+JAX
+```
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| Storage Platform | Critical |
+| DNS Resolution | Required |
+
+Supports:
+
+- Credential Management
+- Administrative Access
 
 Recovery Priority:
 
-1
+```text
+Tier 1
+```
 
 ---
 
-# ARR Platform
+# Storage Dependencies
 
-## Dependency Chain
+## OpenMediaVault
 
-Overseerr
-↓
-Sonarr / Radarr / Lidarr / Readarr
-↓
-Prowlarr
-↓
-qBittorrent
-↓
-Gluetun
-↓
-NordVPN
+Host:
+
+```text
+PAX
+```
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| PAX | Critical |
+| Physical Storage | Critical |
+| Network Connectivity | Required |
+
+Supports:
+
+- Application Storage
+- Media Storage
+- Backup Storage
+- Shared Storage
+
+---
+
+## Kopia
+
+Host:
+
+```text
+JAX
+```
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| OpenMediaVault | Critical |
+| Storage Repository | Critical |
+| OneDrive Replication | Optional |
+
+Supports:
+
+- Backup Protection
+- Disaster Recovery
+
+Recovery Priority:
+
+```text
+Tier 1
+```
+
+---
+
+# Media Platform Dependencies
+
+## Plex
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Critical |
+| Media Storage | Critical |
+| DNS Resolution | Required |
+
+---
+
+## Audiobookshelf
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Critical |
+| Audiobook Storage | Critical |
+
+---
+
+## Immich
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Critical |
+| Photo Storage | Critical |
+| Database | Critical |
+| DNS Resolution | Required |
+
+Recovery Priority:
+
+```text
+Tier 1
+```
+
+---
+
+## Navidrome
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Critical |
+| Music Storage | Critical |
+
+---
+
+## Tautulli
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| Plex | Critical |
+| JAX | Required |
+
+---
+
+## MeTube
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Required |
+
+---
+
+# Automation Platform Dependencies
+
+## Home Assistant
+
+Host:
+
+```text
+MAX
+```
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| MAX | Critical |
+| DNS Resolution | Required |
+| VLAN Connectivity | Required |
+
+Recovery Priority:
+
+```text
+Tier 1
+```
 
 ---
 
 ## qBittorrent
 
-Dependencies:
+Depends On:
 
-- Gluetun
-- Storage
-- DNS
-
-Criticality:
-
-Important
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| Gluetun | Critical |
+| Storage Platform | Critical |
 
 ---
 
 ## Gluetun
 
-Dependencies:
+Depends On:
 
-- DNS
-- Internet
-- NordVPN
+| Dependency | Type |
+|------------|------------|
+| VPN Provider | Critical |
+| Internet Connectivity | Critical |
 
-Criticality:
+Supports:
 
-Critical
+- qBittorrent
+- ARR Platform
 
 ---
 
-# Knowledge Services
+## Prowlarr
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| DNS Resolution | Required |
+| Internet Connectivity | Required |
+| JAX | Critical |
+
+Supports:
+
+- Sonarr
+- Radarr
+- Lidarr
+- Readarr
+
+---
+
+## Sonarr
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| Prowlarr | Required |
+| qBittorrent | Required |
+| Storage Platform | Critical |
+
+---
+
+## Radarr
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| Prowlarr | Required |
+| qBittorrent | Required |
+| Storage Platform | Critical |
+
+---
+
+## Lidarr
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| Prowlarr | Required |
+| qBittorrent | Required |
+| Storage Platform | Critical |
+
+---
+
+## Readarr
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| Prowlarr | Required |
+| qBittorrent | Required |
+| Storage Platform | Critical |
+
+---
+
+## Bazarr
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| Sonarr | Required |
+| Radarr | Required |
+
+---
+
+## Overseerr
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| Plex | Required |
+| Sonarr | Required |
+| Radarr | Required |
+
+---
+
+# Knowledge Platform Dependencies
 
 ## Paperless-ngx
 
-Dependencies:
+Depends On:
 
-- DNS
-- Storage
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Critical |
+| Database | Critical |
 
 Recovery Priority:
 
-1
+```text
+Tier 1
+```
 
 ---
 
 ## Nextcloud
 
-Dependencies:
+Depends On:
 
-- DNS
-- Storage
-
-Recovery Priority:
-
-1
-
----
-
-## BookStack
-
-Dependencies:
-
-- DNS
-- Storage
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Critical |
+| Database | Critical |
 
 Recovery Priority:
 
-1
+```text
+Tier 1
+```
 
 ---
 
 ## Syncthing
 
-Dependencies:
+Depends On:
 
-- DNS
-- Storage
-
-Recovery Priority:
-
-2
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| OpenMediaVault | Critical |
 
 ---
 
-# Recovery Order
+## BookStack
 
-1. UDM-Pro
-2. Switching
-3. DNS
-4. OpenMediaVault
-5. Homepage
-6. Uptime Kuma
-7. Home Assistant
-8. Vaultwarden
-9. Immich
-10. Paperless
-11. Nextcloud
-12. BookStack
-13. Audiobookshelf
-14. Plex
-15. ARR Stack
-16. Optional Services
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| Database | Critical |
+| Storage Platform | Critical |
+
+Recovery Priority:
+
+```text
+Tier 1
+```
+
+---
+
+## Stirling-PDF
+
+Depends On:
+
+| Dependency | Type |
+|------------|------------|
+| JAX | Critical |
+| Storage Platform | Required |
+
+---
+
+# Recovery Dependency Chain
+
+Infrastructure recovery should occur in the following order:
+
+```text
+Network
+    ↓
+DNS
+    ↓
+Storage
+    ↓
+Credential Management
+    ↓
+Critical Services
+    ↓
+Important Services
+    ↓
+Standard Services
+```
+
+---
+
+# Service Recovery Order
+
+## Tier 1
+
+Recover First
+
+1. AdGuard
+2. OpenMediaVault
+3. Vaultwarden
+4. Home Assistant
+5. Immich
+6. Paperless-ngx
+7. Nextcloud
+8. BookStack
+
+---
+
+## Tier 2
+
+Recover Second
+
+1. Homepage
+2. Uptime Kuma
+3. Audiobookshelf
+4. Navidrome
+5. Syncthing
+
+---
+
+## Tier 3
+
+Recover Third
+
+1. Plex
+2. Tautulli
+3. MeTube
+4. ARR Platform
+
+Reference:
+
+RECOVERY-TIME-OBJECTIVES.md
+
+---
+
+# Failure Impact Matrix
+
+| Failed Component | Impact |
+|----------|----------|
+| UDM-Pro | Wide Infrastructure Failure |
+| DNS | Service Discovery Failure |
+| PAX | Storage Failure |
+| OpenMediaVault | Application Storage Failure |
+| JAX | Application Platform Failure |
+| Vaultwarden | Administrative Access Impact |
+| Gluetun | Media Automation Impact |
+| Prowlarr | ARR Platform Impact |
+
+---
+
+# Operational Readiness Requirements
+
+Dependencies should be reviewed during:
+
+- Service Readiness Reviews
+- Operations Readiness Assessments
+- Disaster Recovery Exercises
+- Production Readiness Reviews
+- Annual Certification Reviews
+
+Reference:
+
+- service-readiness-matrix.md
+- operations-readiness-assessment.md
+- production-readiness-review.md
+- ENVIRONMENT-CERTIFICATION.md
+
+---
+
+# Success Criteria
+
+This document is considered current when:
+
+- All production services are represented
+- Critical dependencies are documented
+- Recovery order is documented
+- Failure impact is understood
+- Recovery planning aligns with service dependencies
+- Documentation reflects reality
+
+Dependency information must always reflect the current production environment.
+
+---
+
+# Revision History
+
+| Version | Date | Author | Notes |
+|----------|----------|----------|----------|
+| 1.0 | 2026-10-22 | Eric Yacoub | Initial dependency architecture aligned with Sprint 01-10 implementation, recovery framework, and operational certification model |

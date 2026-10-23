@@ -1,4 +1,4 @@
-# Architecture
+# ARCHITECTURE
 
 ## Purpose
 
@@ -6,32 +6,48 @@ This document serves as the authoritative architectural overview for the WoogleN
 
 It provides a high-level summary of:
 
-- Infrastructure architecture
-- Network architecture
-- Service architecture
-- Storage architecture
-- Security architecture
-- Operational architecture
+- Infrastructure Architecture
+- Network Architecture
+- Service Architecture
+- Storage Architecture
+- Security Architecture
+- Monitoring Architecture
+- Backup & Recovery Architecture
+- Documentation Architecture
+- Governance Architecture
+- Operational Readiness Architecture
 
 This document is intended to be the first document reviewed when understanding the WoogleNet environment.
 
-Detailed implementation information is documented in the supporting architecture documents.
+Detailed implementation information is documented in supporting architecture, operations, security, recovery, and governance documents.
+
+Reference Documents:
+
+- DOCUMENT-INDEX.md
+- HARDWARE-INVENTORY.md
+- SERVICE-INVENTORY.md
+- NETWORK-ARCHITECTURE.md
+- STORAGE-ARCHITECTURE.md
+- DNS-ARCHITECTURE.md
+- VPN-ARCHITECTURE.md
 
 ---
 
 # Executive Summary
 
-WoogleNet is a self-hosted home lab environment designed to provide:
+WoogleNet is a self-hosted family services platform designed to provide:
 
-- Secure network segmentation
-- Family media services
-- Photo backup services
-- Password management
-- Document management
-- Home automation
-- Centralized storage
-- Local AI capabilities
-- Reliable backup and recovery
+- Secure Infrastructure
+- Network Segmentation
+- Family Media Services
+- Photo Management
+- Password Management
+- Document Management
+- File Synchronization
+- Home Automation
+- Centralized Storage
+- Backup & Recovery
+- Operational Governance
 
 The environment prioritizes:
 
@@ -41,29 +57,41 @@ Security
 Recoverability
 Documentation
 Family Usability
+Operational Sustainability
 ```
 
-over enterprise-style complexity.
+over enterprise-scale complexity.
+
+The environment is designed to be:
+
+- Secure
+- Recoverable
+- Well Documented
+- Operationally Manageable
+- Certification Ready
 
 ---
 
 # Architectural Principles
 
-## Primary Principles
+## Core Principles
 
 1. Simplicity over complexity.
 2. Recovery over high availability.
-3. Tailscale over public exposure.
-4. Documentation before deployment.
-5. Data protection before automation.
-6. Services should be easy to rebuild.
-7. Critical data must be backed up.
+3. Documentation before deployment.
+4. Backups before change.
+5. Security by default.
+6. Tailscale before public exposure.
+7. Services should be recoverable.
+8. Critical data must be protected.
+9. Documentation must reflect reality.
+10. Governance must be operationalized.
 
 ---
 
 # Environment Overview
 
-## Physical Infrastructure
+## High-Level Architecture
 
 ```text
 Internet
@@ -78,16 +106,33 @@ TP-Link Switching
 UniFi Wireless
     │
     ▼
-Compute + Storage
+Compute Infrastructure
+    │
+    ▼
+Storage Platform
+    │
+    ▼
+Application Services
 ```
 
 ---
 
-## Compute Platform
+# Infrastructure Architecture
 
-### DAX
+## Infrastructure Hosts
 
-Role:
+| Host | Role | Platform |
+|----------|----------|----------|
+| DAX | Infrastructure Services | Proxmox VE |
+| MAX | Infrastructure Services | Proxmox VE |
+| PAX | Storage Services | Proxmox VE |
+| JAX | Application Services | Ubuntu Server |
+
+---
+
+## DAX
+
+Purpose:
 
 ```text
 Infrastructure Host
@@ -99,17 +144,11 @@ Primary Services:
 - Homepage
 - Uptime Kuma
 
-Platform:
-
-```text
-Proxmox VE
-```
-
 ---
 
-### MAX
+## MAX
 
-Role:
+Purpose:
 
 ```text
 Infrastructure Host
@@ -120,17 +159,11 @@ Primary Services:
 - AdGuard Secondary
 - Home Assistant
 
-Platform:
-
-```text
-Proxmox VE
-```
-
 ---
 
-### PAX
+## PAX
 
-Role:
+Purpose:
 
 ```text
 Storage Host
@@ -140,40 +173,23 @@ Primary Services:
 
 - OpenMediaVault
 
-Platform:
-
-```text
-Proxmox VE
-```
-
 ---
 
-### JAX
+## JAX
 
-Role:
+Purpose:
 
 ```text
 Application Host
-AI Platform
 ```
 
-Primary Services:
+Primary Service Categories:
 
-- Plex
-- Immich
-- Audiobookshelf
-- Vaultwarden
-- ARR Stack
-- BookStack
-- Nextcloud
-- Paperless-ngx
-
-Platform:
-
-```text
-Ubuntu Server
-Docker
-```
+- Media Platform
+- Automation Platform
+- Knowledge Platform
+- Security Platform
+- Backup Platform
 
 ---
 
@@ -194,7 +210,7 @@ Docker
 | 10 | Infrastructure | Servers and Network Equipment |
 | 20 | Trusted | Family Devices |
 | 30 | IoT | Smart Devices |
-| 40 | Guest | Internet Only |
+| 40 | Guest | Internet Access Only |
 
 ---
 
@@ -209,67 +225,75 @@ Services
 
 IoT
      ↓
-Internet
+Restricted Access
 
 Guest
      ↓
-Internet
+Internet Only
 ```
 
 ---
 
-## Remote Access
+## Administrative Access
 
-Primary Method:
-
-```text
-Tailscale
-```
-
-Administrative access is permitted from:
+Approved Administrative Access Methods:
 
 - Trusted VLAN
 - Tailscale
 - Physical Console
 
+Internet Administrative Access:
+
+```text
+Prohibited
+```
+
+Reference:
+
+- SSH-STANDARD.md
+- VPN-ARCHITECTURE.md
+
 ---
 
 # Service Architecture
 
-## Day 1 Services
+## Core Infrastructure Platform
 
-Core services required for initial operation.
+Services required for foundational operation.
 
-### Infrastructure
+### Services
 
 - AdGuard Primary
 - AdGuard Secondary
 - Homepage
 - Uptime Kuma
-
-### Media
-
-- Plex
-- Audiobookshelf
-
-### Photos
-
-- Immich
+- Vaultwarden
+- Tailscale
 
 ---
 
-## Day 2 Services
+## Media Platform
 
-### Home Automation
+Services supporting media management and consumption.
+
+### Services
+
+- Plex
+- Audiobookshelf
+- Immich
+- Navidrome
+- Tautulli
+- MeTube
+
+---
+
+## Automation Platform
+
+Services supporting automation and media acquisition.
+
+### Services
 
 - Home Assistant
-
-### Security
-
-- Vaultwarden
-
-### Media Automation
-
 - qBittorrent
 - Prowlarr
 - Sonarr
@@ -278,39 +302,27 @@ Core services required for initial operation.
 - Readarr
 - Bazarr
 - Overseerr
-
-### Additional Services
-
-- Navidrome
-- Tautulli
-- MeTube
-- Stirling-PDF
+- Gluetun
 
 ---
 
-## Day 4 Services
+## Knowledge Platform
 
-### Document Platform
+Services supporting documentation, files, and collaboration.
+
+### Services
 
 - Paperless-ngx
-
-### File Platform
-
 - Nextcloud
-
-### Synchronization
-
 - Syncthing
-
-### Documentation
-
 - BookStack
+- Stirling-PDF
 
 ---
 
 ## AI Platform
 
-Managed separately.
+The AI platform is managed separately.
 
 Repository:
 
@@ -318,13 +330,15 @@ Repository:
 My_Local_AI_Config
 ```
 
-Components include:
+Managed Components:
 
 - Ollama
 - Open WebUI
 - Local Models
 - Agents
 - Future RAG Components
+
+The WoogleNet repository tracks only infrastructure dependencies supporting AI workloads.
 
 ---
 
@@ -350,9 +364,26 @@ Deployment:
 Virtual Machine
 ```
 
+Status:
+
+```text
+Operational
+```
+
 ---
 
-## Storage Structure
+## Storage Functions
+
+- Application Storage
+- Media Storage
+- Photo Storage
+- Document Storage
+- Backup Repository Storage
+- Shared Storage
+
+---
+
+## Logical Storage Layout
 
 ```text
 /storage
@@ -366,149 +397,64 @@ Virtual Machine
 └── homeassistant
 ```
 
----
+Reference:
 
-## Data Classification
-
-### Critical
-
-- Immich
-- Vaultwarden
-- Paperless-ngx
-- Nextcloud
-- Home Assistant
-- BookStack
-
----
-
-### Important
-
-- Audiobookshelf
-- Navidrome
-- ARR Services
-- Uptime Kuma
-
----
-
-### Disposable
-
-- Cache Data
-- Docker Images
-- Temporary Downloads
-
----
-
-# DNS Architecture
-
-## DNS Platform
-
-Platform:
-
-```text
-AdGuard Home
-```
-
----
-
-## High Availability Design
-
-### Primary
-
-```text
-10.0.10.50
-```
-
-AdGuard Primary
-
-Host:
-
-```text
-DAX
-```
-
----
-
-### Secondary
-
-```text
-10.0.10.51
-```
-
-AdGuard Secondary
-
-Host:
-
-```text
-MAX
-```
-
----
-
-## Upstream DNS
-
-### Primary
-
-```text
-Quad9
-```
-
-### Secondary
-
-```text
-Cloudflare
-```
+- STORAGE-ARCHITECTURE.md
+- STORAGE-MAP.md
 
 ---
 
 # Security Architecture
 
-## Authentication
+## Security Model
 
-Vaultwarden serves as the credential management platform.
+The environment follows a layered security model based on:
 
-Minimum password length:
+- Network Segmentation
+- Tailscale Access
+- MFA Enforcement
+- Credential Governance
+- Security Auditing
+- Recovery Planning
+
+---
+
+## Credential Management
+
+Credential management is provided by:
 
 ```text
-16 Characters
+Vaultwarden
 ```
+
+Reference:
+
+- CREDENTIAL-MANAGEMENT-STANDARD.md
 
 ---
 
 ## MFA Requirements
 
-Required:
+Required Administrative MFA:
 
 - Vaultwarden
 - Tailscale
-- Home Assistant
+- Home Assistant Administration
+- Nextcloud Administration
+- Infrastructure Administration
 
-Optional:
+Reference:
 
-- Immich
-- Nextcloud
-
----
-
-## Internet Exposure
-
-Approved internet-facing service:
-
-```text
-Plex
-```
-
-All other services should be accessed through:
-
-```text
-Tailscale
-```
+- MFA-STANDARD.md
 
 ---
 
-## SSH Policy
+## SSH Controls
+
+Internet SSH Exposure:
 
 ```text
-Disabled Unless Needed
+Prohibited
 ```
 
 Root SSH:
@@ -517,23 +463,51 @@ Root SSH:
 Disabled
 ```
 
+Reference:
+
+- SSH-STANDARD.md
+
+---
+
+## Public Exposure
+
+Approved Internet-Facing Service:
+
+```text
+Plex
+```
+
+All other administrative access should occur through:
+
+```text
+Tailscale
+```
+
+Reference:
+
+- SECURITY-BASELINE.md
+
 ---
 
 # Monitoring Architecture
 
-## Monitoring Platforms
-
-### Homepage
+## Homepage
 
 Purpose:
 
 ```text
-Dashboard
+Operational Dashboard
 ```
+
+Functions:
+
+- Service Visibility
+- Administrative Access
+- Service Organization
 
 ---
 
-### Uptime Kuma
+## Uptime Kuma
 
 Purpose:
 
@@ -543,18 +517,17 @@ Alerting
 Notifications
 ```
 
+Functions:
+
+- Availability Monitoring
+- Service Health Checks
+- Notification Delivery
+
 ---
 
-## Notification Methods
+## Monitoring Scope
 
-- Email
-- Mobile Notifications
-
----
-
-## Monitored Components
-
-### Infrastructure
+Infrastructure:
 
 - UDM-Pro
 - DAX
@@ -563,24 +536,28 @@ Notifications
 - JAX
 - OpenMediaVault
 
-### Core Services
+Core Services:
 
 - AdGuard
 - Homepage
 - Uptime Kuma
-
-### Family Services
-
-- Plex
-- Immich
-- Audiobookshelf
 - Vaultwarden
+
+Critical Services:
+
+- Home Assistant
+- Immich
+- Paperless
+- Nextcloud
+- BookStack
 
 ---
 
 # Backup Architecture
 
-## Platform
+## Backup Platform
+
+Platform:
 
 ```text
 Kopia
@@ -588,15 +565,15 @@ Kopia
 
 ---
 
-## Local Repository
+## Repository Strategy
+
+### Local Repository
 
 ```text
 OpenMediaVault
 ```
 
----
-
-## Offsite Repository
+### Offsite Repository
 
 ```text
 OneDrive
@@ -618,17 +595,21 @@ Important Data:
 Weekly
 ```
 
-Low Priority Data:
+Standard Data:
 
 ```text
 Monthly
 ```
 
+Reference:
+
+- BACKUP-AND-RESTORE.md
+
 ---
 
-# Disaster Recovery Strategy
+# Recovery Architecture
 
-## Recovery Approach
+## Design Philosophy
 
 ```text
 Recoverable
@@ -637,106 +618,226 @@ Not Highly Available
 
 ---
 
-## Recovery Priority 1
+## Recovery Tiers
 
-- DNS
-- Storage
-- Immich
+Reference:
+
+RECOVERY-TIME-OBJECTIVES.md
+
+### Tier 1 Critical Services
+
 - Vaultwarden
+- Home Assistant
+- Immich
 - Paperless
 - Nextcloud
-- Home Assistant
+- BookStack
+- AdGuard
 
 ---
 
-## Recovery Priority 2
+### Tier 2 Important Services
 
+- Audiobookshelf
+- Navidrome
+- Syncthing
 - Homepage
 - Uptime Kuma
-- Audiobookshelf
 
 ---
 
-## Recovery Priority 3
+### Tier 3 Rebuildable Services
 
 - Plex
-- ARR Stack
+- Tautulli
+- MeTube
+- ARR Services
+
+---
+
+## Recovery Protection
+
+Mechanisms:
+
+- Kopia Backups
+- OneDrive Replication
+- Restore Testing
+- Disaster Recovery Exercises
+
+Reference:
+
+- DISASTER-RECOVERY.md
+- BACKUP-AND-RESTORE.md
+
+---
+
+# Documentation Architecture
+
+## Documentation Sources
+
+Authoritative Documentation Locations:
+
+- Git Repository
+- BookStack
+
+---
+
+## Documentation Categories
+
+- Program Documentation
+- Architecture Documentation
+- Infrastructure Documentation
+- Service Documentation
+- Security Documentation
+- Operations Documentation
+- Recovery Documentation
+- Governance Documentation
+- Certification Documentation
+
+Reference:
+
+DOCUMENT-INDEX.md
+
+---
+
+## Documentation Governance
+
+Documentation lifecycle management is governed by:
+
+DOCUMENTATION-GOVERNANCE-STANDARD.md
+
+---
+
+# Governance Architecture
+
+## Security Governance
+
+Security governance is provided through:
+
+- SECURITY-BASELINE.md
+- MFA-STANDARD.md
+- SSH-STANDARD.md
+- CREDENTIAL-MANAGEMENT-STANDARD.md
+- SECURITY-AUDIT-PROGRAM.md
+
+---
+
+## Documentation Governance
+
+Documentation governance is provided through:
+
+- DOCUMENTATION-GOVERNANCE-STANDARD.md
+- DOCUMENT-INDEX.md
+- BookStack
+
+---
+
+## Recovery Governance
+
+Recovery governance is provided through:
+
+- BACKUP-AND-RESTORE.md
+- DISASTER-RECOVERY.md
+- RECOVERY-TIME-OBJECTIVES.md
+
+---
+
+## Operational Governance
+
+Operational governance is provided through:
+
+- OPERATIONS-RUNBOOK.md
+- service-readiness-matrix.md
+- operations-readiness-assessment.md
+
+---
+
+# Operational Readiness Architecture
+
+## Validation Model
+
+Operational readiness validation follows:
+
+```text
+Service Inventory
+        ↓
+Service Readiness Matrix
+        ↓
+Operations Readiness Assessment
+        ↓
+Disaster Recovery Exercise
+        ↓
+Production Readiness Review
+        ↓
+Operational Validation Report
+        ↓
+Environment Certification
+```
+
+---
+
+## Operational Status
+
+| Area | Status |
+|----------|----------|
+| Infrastructure | ✅ Operational |
+| Services | ✅ Operational |
+| Monitoring | ✅ Operational |
+| Security | ✅ Governed |
+| Backup | ✅ Operational |
+| Recovery | ✅ Validated |
+| Documentation | ✅ Governed |
+| Operations | ✅ Validated |
+
+---
+
+# Certification Framework
+
+Operational certification is governed through:
+
+- service-readiness-matrix.md
+- operations-readiness-assessment.md
+- disaster-recovery-exercise.md
+- production-readiness-review.md
+- operational-validation-report.md
+- ENVIRONMENT-CERTIFICATION.md
+
+The environment architecture is considered fully validated when certification activities are successfully completed.
 
 ---
 
 # Single Points of Failure
 
-| Component | Impact |
-|----------|----------|
-| UDM-Pro | Network Loss |
-| OpenMediaVault | Storage Loss |
-| JAX | Service Loss |
-| Internet | Remote Access Impact |
+| Component | Impact | Mitigation |
+|----------|----------|----------|
+| UDM-Pro | Network Loss | Configuration Backups |
+| PAX | Storage Loss | Recovery Procedures |
+| OpenMediaVault | Storage Services Loss | Backup Protection |
+| JAX | Application Service Loss | Recovery Framework |
+| Internet Service | Remote Access Impact | Local Operations Continue |
 
----
+Reference:
 
-## Mitigations
-
-| Component | Mitigation |
-|----------|----------|
-| UDM-Pro | USG Pro Recovery Device |
-| DNS | AdGuard HA Pair |
-| Data | Kopia Backups |
-| Site Loss | OneDrive Offsite Backups |
-
----
-
-# Documentation Set
-
-## Architecture
-
-- ARCHITECTURE.md
-- NETWORK-TOPOLOGY.md
-- IP-ADDRESS-PLAN.md
-- VLAN-PLAN.md
-- FIREWALL-RULES.md
-- DNS-ARCHITECTURE.md
-- REMOTE-ACCESS.md
-
----
-
-## Infrastructure
-
-- HARDWARE-INVENTORY.md
-- STORAGE-ARCHITECTURE.md
-- STORAGE-MAP.md
-
----
-
-## Services
-
-- SERVICE-INVENTORY.md
-- SERVICE-DEPENDENCIES.md
-
----
-
-## Operations
-
-- BACKUP-AND-RESTORE.md
-- DISASTER-RECOVERY.md
-- OPERATIONS-RUNBOOK.md
-- MONITORING-AND-ALERTING.md
-- SECURITY-BASELINE.md
+DISASTER-RECOVERY.md
 
 ---
 
 # Success Criteria
 
-The architecture is considered complete when:
+The architecture is considered complete and operational when:
 
-- Network segmentation is operational
-- Infrastructure services are operational
-- Storage platform is operational
-- Backup platform is operational
-- Monitoring platform is operational
-- Security baseline is implemented
-- Documentation reflects reality
-- Critical recovery procedures are validated
+- Infrastructure Services Are Operational
+- Storage Platform Is Operational
+- Network Segmentation Is Operational
+- Monitoring Platform Is Operational
+- Security Governance Is Active
+- Documentation Governance Is Active
+- Backup Protection Is Operational
+- Recovery Procedures Are Validated
+- Operational Readiness Reviews Are Complete
+- Certification Framework Is Operational
+
+The architecture must continuously reflect the current production environment.
 
 ---
 
@@ -744,4 +845,5 @@ The architecture is considered complete when:
 
 | Version | Date | Author | Notes |
 |----------|----------|----------|----------|
+| 2.0 | 2026-10-22 | Eric Yacoub | Updated following completion of Sprint 01-10 implementation, governance, recovery, operational readiness, and certification framework |
 | 1.0 | 2026-10-22 | Eric Yacoub | Initial Architecture Overview |

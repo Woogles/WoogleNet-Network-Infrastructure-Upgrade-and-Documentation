@@ -1,20 +1,33 @@
-# Rack Layout
+# RACK-LAYOUT
 
 ## Purpose
 
 This document serves as the authoritative reference for the physical rack layout within the WoogleNet environment.
 
-The goals of this document are:
+The purpose of this document is to:
 
-- Document rack organization
-- Document equipment placement
-- Support troubleshooting
-- Support maintenance activities
-- Support cabling documentation
-- Support power planning
-- Simplify hardware replacement
+- Document Physical Equipment Placement
+- Document Rack Utilization
+- Document Infrastructure Locations
+- Support Troubleshooting
+- Support Maintenance Activities
+- Support Power Planning
+- Support Cabling Management
+- Support Hardware Replacement
+- Support Recovery Planning
+- Support Certification Activities
 
-This document should be updated whenever rack equipment is added, removed, relocated, or replaced.
+This document should always reflect the current physical infrastructure deployment.
+
+Reference Documents:
+
+- ARCHITECTURE.md
+- HARDWARE-INVENTORY.md
+- NETWORK-ARCHITECTURE.md
+- CABLING.md
+- POWER-AND-UPS.md
+- DISASTER-RECOVERY.md
+- ENVIRONMENT-CERTIFICATION.md
 
 ---
 
@@ -24,73 +37,79 @@ This document should be updated whenever rack equipment is added, removed, reloc
 |----------|----------|
 | Rack Size | 42U |
 | Rack Type | 4-Post Rack |
-| Status | Active |
-| Documentation Status | Current |
+| Status | Operational |
+| Documentation Status | Controlled |
 
 ---
 
-# Rack Design Principles
+# Design Principles
 
-## Layout Strategy
+## Rack Organization Strategy
 
-Equipment is organized using the following approach:
+Equipment is organized using the following structure:
 
 ```text
-Top:
+Top
+        ↓
 Network Infrastructure
 
-Middle:
-Management
+Middle
+        ↓
+Management & Operations
 
-Lower Middle:
-Compute
+Lower Middle
+        ↓
+Compute Infrastructure
 
-Bottom:
-Power
+Bottom
+        ↓
+Power Infrastructure
 ```
 
 ---
 
 ## Design Goals
 
-- Keep networking equipment accessible
-- Minimize cable lengths
-- Centralize patching
-- Isolate power infrastructure
-- Provide room for future growth
+- Minimize Cable Lengths
+- Simplify Troubleshooting
+- Simplify Maintenance
+- Improve Airflow
+- Centralize Network Infrastructure
+- Isolate Power Infrastructure
+- Maintain Expansion Capacity
 
 ---
 
 # Rack Layout Overview
 
-| Rack Units | Equipment | Notes |
+| Rack Units | Equipment | Purpose |
 |------------|------------|------------|
-| U01 | UDM-Pro | Router / Gateway |
-| U02 | Patch Panel | Network Termination |
-| U03 | TP-Link Switch | Distribution Switch |
-| U04 | Patch Panel | Network Termination |
-| U05 | TP-Link Switch | Distribution Switch |
-| U06 | Patch Panel | Network Termination |
-| U07 | Switch | Future / Auxiliary Switch |
-| U08 | Patch Panel | Network Termination |
-| U09-U11 | Reserved | Future Expansion |
+| U01 | UDM-Pro | Gateway / Firewall |
+| U02 | Patch Panel 01 | Network Termination |
+| U03 | TP-Link Switch 01 | Core Switching |
+| U04 | Patch Panel 02 | Network Termination |
+| U05 | TP-Link Switch 02 | Core Switching |
+| U06 | Patch Panel 03 | Network Termination |
+| U07 | Auxiliary Switch | Expansion Capacity |
+| U08 | Patch Panel 04 | Network Termination |
+| U09-U11 | Reserved | Expansion Capacity |
 | U12 | Rack Monitor | Console Access |
-| U13-U15 | Reserved | Future Expansion |
-| U16 | Shelf | Keyboard and Mouse |
-| U17-U20 | Reserved | Future Expansion |
-| U21 | Shelf | Accessories |
-| U22 | Reserved | Future Expansion |
-| U23 | KVM | Server Access |
-| U24-U25 | DAX | Proxmox Host |
-| U26-U27 | MAX | Proxmox Host |
-| U28-U29 | JAX / Alternate System Position | Non-Rack System Support Area |
-| U30-U31 | PAX | Proxmox Host |
-| U32-U39 | UPS Infrastructure | Rack Mounted UPS Units |
-| U40-U42 | Reserved | Future Expansion |
+| U13-U15 | Reserved | Expansion Capacity |
+| U16 | Management Shelf | Keyboard / Mouse |
+| U17-U20 | Reserved | Expansion Capacity |
+| U21 | Accessory Shelf | Spare Components |
+| U22 | Reserved | Expansion Capacity |
+| U23 | KVM | Local Management |
+| U24-U25 | DAX | Infrastructure Host |
+| U26-U27 | MAX | Infrastructure Host |
+| U28-U29 | Reserved Compute Area | Future Expansion |
+| U30-U31 | PAX | Storage Host |
+| U32-U39 | UPS Infrastructure | Power Protection |
+| U40-U42 | Reserved | Future Growth |
 
 ---
 
-# Network Infrastructure Section
+# Network Infrastructure Zone
 
 ## U01
 
@@ -107,19 +126,13 @@ DHCP
 
 Dependencies:
 
-- Internet Connection
+- Internet Connectivity
 - Switching Infrastructure
 
----
-
-## U02
-
-### Patch Panel
-
-Purpose:
+Classification:
 
 ```text
-Horizontal Cabling Termination
+Critical
 ```
 
 ---
@@ -134,16 +147,10 @@ Role:
 Core Distribution
 ```
 
----
-
-## U04
-
-### Patch Panel
-
-Purpose:
+Classification:
 
 ```text
-Horizontal Cabling Termination
+Critical
 ```
 
 ---
@@ -158,16 +165,10 @@ Role:
 Core Distribution
 ```
 
----
-
-## U06
-
-### Patch Panel
-
-Purpose:
+Classification:
 
 ```text
-Horizontal Cabling Termination
+Critical
 ```
 
 ---
@@ -176,27 +177,91 @@ Horizontal Cabling Termination
 
 ### Auxiliary Switch
 
-Status:
+Role:
 
 ```text
-Reserved / Future Use
+Expansion Capacity
+```
+
+Classification:
+
+```text
+Standard
 ```
 
 ---
 
-## U08
+# Patch Panel Infrastructure
 
-### Patch Panel
+## Patch Panel 01
+
+Location:
+
+```text
+U02
+```
 
 Purpose:
 
 ```text
-Horizontal Cabling Termination
+Structured Cabling Termination
 ```
 
 ---
 
-# Console Management Section
+## Patch Panel 02
+
+Location:
+
+```text
+U04
+```
+
+Purpose:
+
+```text
+Structured Cabling Termination
+```
+
+---
+
+## Patch Panel 03
+
+Location:
+
+```text
+U06
+```
+
+Purpose:
+
+```text
+Structured Cabling Termination
+```
+
+---
+
+## Patch Panel 04
+
+Location:
+
+```text
+U08
+```
+
+Purpose:
+
+```text
+Structured Cabling Termination
+```
+
+Reference:
+
+CABLING.md
+
+---
+
+# Management Infrastructure
 
 ## U12
 
@@ -204,9 +269,9 @@ Horizontal Cabling Termination
 
 Purpose:
 
-- Host Management
-- Console Access
-- Recovery Operations
+- Local Console Access
+- Infrastructure Recovery
+- Maintenance Activities
 
 ---
 
@@ -219,6 +284,12 @@ Contents:
 - Keyboard
 - Mouse
 
+Purpose:
+
+```text
+Local Administration
+```
+
 ---
 
 ## U21
@@ -228,8 +299,8 @@ Contents:
 Contents:
 
 - Spare Components
-- Small Accessories
 - Temporary Equipment
+- Replacement Hardware
 
 ---
 
@@ -239,17 +310,24 @@ Contents:
 
 Purpose:
 
-- Local Server Management
-- Emergency Access
+- Local Infrastructure Management
 - Operating System Installation
+- Recovery Operations
+- Emergency Access
+
+Classification:
+
+```text
+Critical
+```
 
 ---
 
-# Compute Section
+# Compute Infrastructure
 
 ## DAX
 
-### Rack Location
+### Location
 
 ```text
 U24-U25
@@ -267,11 +345,15 @@ Primary Services:
 - Homepage
 - Uptime Kuma
 
+Reference:
+
+SERVICE-INVENTORY.md
+
 ---
 
 ## MAX
 
-### Rack Location
+### Location
 
 ```text
 U26-U27
@@ -288,32 +370,15 @@ Primary Services:
 - AdGuard Secondary
 - Home Assistant
 
----
+Reference:
 
-## JAX
-
-### Current Status
-
-The final physical location of JAX requires validation.
-
-Known:
-
-```text
-If JAX is the Dell T5810,
-it is not rack mountable.
-```
-
-Status:
-
-```text
-Requires Physical Verification
-```
+SERVICE-INVENTORY.md
 
 ---
 
 ## PAX
 
-### Rack Location
+### Location
 
 ```text
 U30-U31
@@ -322,28 +387,69 @@ U30-U31
 ### Role
 
 ```text
-Storage Platform Host
+Storage Host
 ```
 
 Primary Services:
 
-- OpenMediaVault VM
+- OpenMediaVault
+
+Reference:
+
+STORAGE-ARCHITECTURE.md
 
 ---
 
-# Power Section
+## JAX
 
-## UPS Area
+### Role
 
-### Rack Units
+```text
+Application Platform
+```
+
+Primary Services:
+
+- Media Platform
+- Automation Platform
+- Knowledge Platform
+- Security Platform
+
+Current Deployment:
+
+```text
+Non-Rack-Mounted System
+```
+
+Reference:
+
+HARDWARE-INVENTORY.md
+
+---
+
+# Power Infrastructure
+
+## UPS Zone
+
+### Rack Location
 
 ```text
 U32-U39
 ```
 
+Purpose:
+
+```text
+Power Protection
+```
+
+Reference:
+
+POWER-AND-UPS.md
+
 ---
 
-## Installed UPS Units
+## Installed UPS Systems
 
 ### Tripp Lite SMART1500LCD
 
@@ -355,7 +461,7 @@ Quantity:
 
 ---
 
-### APC Back-UPS Pro 1500VA
+### APC Back-UPS Pro
 
 Quantity:
 
@@ -365,109 +471,202 @@ Quantity:
 
 ---
 
-## Responsibilities
-
-- Runtime Protection
-- Graceful Shutdown
-- Power Conditioning
-
----
-
-# Reserved Rack Space
-
-## Expansion Capacity
-
-### Upper Rack
-
-```text
-U09-U11
-```
-
-Reserved for:
-
-- Network Expansion
-- Future Appliances
-
----
-
-### Mid Rack
-
-```text
-U13-U15
-U17-U20
-U22
-```
-
-Reserved for:
-
-- Additional Servers
-- Future Equipment
-
----
-
-### Lower Rack
-
-```text
-U40-U42
-```
-
-Reserved for:
-
-- Future UPS
-- Additional Storage
-- Expansion Hardware
-
----
-
 # Physical Asset Mapping
 
-| System | Rack Position |
-|----------|----------|
-| UDM-Pro | U01 |
-| Switch 01 | U03 |
-| Switch 02 | U05 |
-| Auxiliary Switch | U07 |
-| Monitor | U12 |
-| KVM | U23 |
-| DAX | U24-U25 |
-| MAX | U26-U27 |
-| JAX | TBD |
-| PAX | U30-U31 |
-| UPS Infrastructure | U32-U39 |
+| Asset | Location | Criticality |
+|----------|----------|----------|
+| UDM-Pro | U01 | Critical |
+| Patch Panel 01 | U02 | Critical |
+| Switch 01 | U03 | Critical |
+| Patch Panel 02 | U04 | Critical |
+| Switch 02 | U05 | Critical |
+| Patch Panel 03 | U06 | Critical |
+| Auxiliary Switch | U07 | Standard |
+| Patch Panel 04 | U08 | Critical |
+| Rack Monitor | U12 | Important |
+| Management Shelf | U16 | Standard |
+| Accessory Shelf | U21 | Standard |
+| KVM | U23 | Critical |
+| DAX | U24-U25 | Critical |
+| MAX | U26-U27 | Critical |
+| PAX | U30-U31 | Critical |
+| UPS Infrastructure | U32-U39 | Critical |
+
+---
+
+# Recovery Considerations
+
+## Recovery Priority
+
+Physical infrastructure should be restored in the following order:
+
+```text
+Power Infrastructure
+        ↓
+Network Infrastructure
+        ↓
+Storage Infrastructure
+        ↓
+Compute Infrastructure
+        ↓
+Application Services
+```
+
+Reference:
+
+DISASTER-RECOVERY.md
+
+---
+
+## Critical Recovery Components
+
+The following rack assets directly support Tier 1 recovery:
+
+- UDM-Pro
+- Switch 01
+- Switch 02
+- DAX
+- MAX
+- PAX
+- UPS Infrastructure
+
+---
+
+# Capacity Management
+
+## Utilized Rack Space
+
+Approximate Utilized Rack Units:
+
+```text
+24U
+```
+
+---
+
+## Reserved Capacity
+
+Approximate Reserved Rack Units:
+
+```text
+18U
+```
+
+Purpose:
+
+- Future Infrastructure
+- Additional Storage
+- Additional Compute
+- Additional UPS Capacity
+
+---
+
+# Maintenance Requirements
+
+## Monthly
+
+Verify:
+
+- Equipment Mounted Securely
+- Airflow Unobstructed
+- Cable Management Intact
+- UPS Status Normal
+
+---
+
+## Quarterly
+
+Verify:
+
+- Rack Inventory Accuracy
+- Device Placement Accuracy
+- Label Visibility
+- Console Access Functionality
+
+---
+
+## Annual
+
+Review:
+
+- Capacity Utilization
+- Expansion Planning
+- Physical Infrastructure Condition
+
+Reference:
+
+OPERATIONS-RUNBOOK.md
+
+---
+
+# Operational Readiness Requirements
+
+Physical infrastructure is considered operationally ready when:
+
+✅ Equipment Locations Verified
+
+✅ Power Protection Operational
+
+✅ Network Connectivity Verified
+
+✅ Recovery Dependencies Documented
+
+✅ Asset Inventory Current
+
+Reference:
+
+operations-readiness-assessment.md
+
+---
+
+# Certification Requirements
+
+Rack certification requires:
+
+✅ Device Locations Verified
+
+✅ Power Infrastructure Verified
+
+✅ Network Infrastructure Verified
+
+✅ Asset Inventory Current
+
+✅ Documentation Accurate
+
+Reference:
+
+ENVIRONMENT-CERTIFICATION.md
 
 ---
 
 # Validation Checklist
 
-- [ ] Verify DAX Location
-- [ ] Verify MAX Location
-- [ ] Verify PAX Location
-- [ ] Verify JAX Location
-- [ ] Verify UPS Positions
-- [ ] Verify Patch Panel Count
-- [ ] Verify KVM Connectivity
-- [ ] Verify Cable Management
+- [ ] UDM-Pro Location Verified
+- [ ] Switch Locations Verified
+- [ ] Patch Panel Locations Verified
+- [ ] DAX Location Verified
+- [ ] MAX Location Verified
+- [ ] PAX Location Verified
+- [ ] JAX Deployment Location Verified
+- [ ] KVM Connectivity Verified
+- [ ] UPS Locations Verified
+- [ ] Documentation Current
 
 ---
 
-# Open Decisions
+# Success Criteria
 
-| Item | Status |
-|----------|----------|
-| Final JAX Position | Requires Validation |
-| Auxiliary Switch Usage | TBD |
-| Rack Expansion Strategy | Future Review |
-| Additional Storage Hardware | Future Review |
+The rack layout is considered current when:
 
----
+- Equipment Locations Are Accurate
+- Physical Inventory Is Accurate
+- Recovery Dependencies Are Documented
+- Power Infrastructure Is Documented
+- Expansion Capacity Is Documented
+- Certification Requirements Are Satisfied
+- Documentation Reflects Reality
 
-# Related Documents
-
-- ARCHITECTURE.md
-- HARDWARE-INVENTORY.md
-- NETWORK-TOPOLOGY.md
-- CABLING.md
-- POWER-AND-UPS.md
+The rack layout serves as the authoritative physical infrastructure reference for the WoogleNet environment.
 
 ---
 
@@ -475,4 +674,5 @@ Reserved for:
 
 | Version | Date | Author | Notes |
 |----------|----------|----------|----------|
+| 2.0 | 2026-10-22 | Eric Yacoub | Rewritten to align with operational readiness framework, power architecture, recovery model, asset inventory, and certification requirements |
 | 1.0 | 2026-10-22 | Eric Yacoub | Initial Rack Layout Documentation |

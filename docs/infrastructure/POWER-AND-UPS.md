@@ -1,19 +1,33 @@
-# Power and UPS
+# POWER-AND-UPS
 
 ## Purpose
 
-This document defines the power infrastructure, UPS deployment, shutdown procedures, power recovery procedures, and power protection strategy for the WoogleNet environment.
+This document defines the power architecture, UPS deployment, shutdown procedures, recovery procedures, and power protection standards for the WoogleNet environment.
 
-The goals of this architecture are:
+The objectives of the power and UPS program are to:
 
-- Protect equipment from power outages
-- Provide graceful shutdown capabilities
-- Extend equipment lifespan
-- Prevent data corruption
-- Maintain network availability during short outages
-- Support disaster recovery procedures
+- Protect Infrastructure
+- Prevent Data Corruption
+- Support Graceful Shutdown
+- Protect Critical Services
+- Improve Recoverability
+- Support Disaster Recovery
+- Support Operational Readiness
+- Support Environment Certification
 
-This document should be reviewed when equipment is added, removed, relocated, or power requirements change.
+Power protection is a Tier 1 operational requirement and supports every critical service within the WoogleNet environment.
+
+Reference Documents:
+
+- ARCHITECTURE.md
+- HARDWARE-INVENTORY.md
+- RACK-LAYOUT.md
+- STORAGE-ARCHITECTURE.md
+- OPERATIONS-RUNBOOK.md
+- MONITORING-AND-ALERTING.md
+- DISASTER-RECOVERY.md
+- RECOVERY-TIME-OBJECTIVES.md
+- ENVIRONMENT-CERTIFICATION.md
 
 ---
 
@@ -21,12 +35,38 @@ This document should be reviewed when equipment is added, removed, relocated, or
 
 ## Design Principles
 
-1. Critical infrastructure should remain online as long as possible.
-2. Servers should shut down gracefully.
-3. Networking equipment should remain online longer than compute resources.
-4. UPS runtime is more important than maximum load.
-5. Recovery should be automated where practical.
-6. Power dependency chains should remain simple.
+The power architecture follows these principles:
+
+1. Networking Survives Longest
+2. Graceful Shutdown Preferred
+3. Storage Protected Before Applications
+4. Recovery Should Be Predictable
+5. Monitoring Must Be Continuous
+6. Power Events Must Generate Alerts
+7. Recovery Procedures Must Be Tested
+8. Simplicity Over Complexity
+
+---
+
+# Power Infrastructure Overview
+
+## High-Level Architecture
+
+```text
+Utility Power
+        ↓
+UPS Infrastructure
+        ↓
+Network Infrastructure
+        ↓
+Storage Infrastructure
+        ↓
+Compute Infrastructure
+        ↓
+Application Services
+```
+
+The power architecture prioritizes maintaining network services and controlled shutdowns rather than extending runtime indefinitely.
 
 ---
 
@@ -40,7 +80,7 @@ This document should be reviewed when equipment is added, removed, relocated, or
 | Capacity | 1500VA |
 | Output Power | 900W |
 | Form Factor | Rack Mount |
-| Status | Installed |
+| Status | Operational |
 
 ---
 
@@ -51,83 +91,83 @@ This document should be reviewed when equipment is added, removed, relocated, or
 | Quantity | 2 |
 | Capacity | 1500VA |
 | Output Power | 900W |
-| Status | Installed |
+| Status | Operational |
 
 ---
 
-# Rack Power Layout
-
-## Rack Power Zone
-
-Rack Units:
+## Total UPS Count
 
 ```text
-U32-U39
+5
 ```
+
+UPS Systems
+
+Reference:
+
+HARDWARE-INVENTORY.md
+
+---
+
+# Power Protection Strategy
+
+## Priority 1
+
+Network Infrastructure
 
 Purpose:
 
-```text
-Primary UPS Infrastructure
-```
+Maintain visibility, connectivity, and recovery capability.
 
----
-
-## Current Installation
-
-| Location | Equipment |
-|----------|----------|
-| U32-U39 | UPS Systems |
-| Status | Requires Final Mapping |
-
----
-
-# Power Distribution Strategy
-
-## Priority 1 - Network Infrastructure
-
-Must remain online as long as possible.
-
-### Devices
+Protected Systems:
 
 - UDM-Pro
 - TP-Link Switch 01
 - TP-Link Switch 02
-- Access Points
+- Wireless Infrastructure
 
-### Reason
-
-These devices maintain:
+Functions Protected:
 
 - Routing
 - DNS Access
 - DHCP
-- Remote Connectivity
-- Recovery Access
+- Remote Administration
+- Recovery Connectivity
 
 ---
 
-## Priority 2 - Storage Infrastructure
+## Priority 2
 
-### Devices
+Storage Infrastructure
+
+Protected Systems:
 
 - PAX
 - OpenMediaVault
 
-### Reason
+Functions Protected:
 
-Storage shutdown should occur only after networking remains available long enough for graceful processing.
+- Storage Services
+- Backup Repository
+- Shared Storage
+- Application Data
+
+Reference:
+
+STORAGE-ARCHITECTURE.md
 
 ---
 
-## Priority 3 - Infrastructure Services
+## Priority 3
 
-### Devices
+Infrastructure Services
+
+Protected Systems:
 
 - DAX
 - MAX
 
-### Services
+Protected Services:
 
 - AdGuard Primary
 - AdGuard Secondary
@@ -137,85 +177,138 @@ Storage shutdown should occur only after networking remains available long enoug
 
 ---
 
-## Priority 4 - Application Services
+## Priority 4
 
-### Devices
+Application Services
+
+Protected Systems:
 
 - JAX
 
-### Services
+Protected Services:
 
-- Plex
-- Immich
-- Audiobookshelf
 - Vaultwarden
-- ARR Stack
+- Immich
+- Plex
+- Audiobookshelf
+- Navidrome
 - Nextcloud
 - Paperless-ngx
 - BookStack
+- ARR Platform
 
 ---
 
 # UPS Management Platform
 
-## Standard
+## Platform
 
 ```text
 NUT
-Network UPS Tools
+(Network UPS Tools)
 ```
 
----
-
-## Purpose
+Purpose:
 
 - UPS Monitoring
+- Runtime Monitoring
 - Battery Monitoring
 - Event Notification
 - Automated Shutdown
-- Runtime Monitoring
+
+Status:
+
+```text
+Production
+```
 
 ---
 
-# Power Failure Response
+# Monitoring Requirements
 
-## Utility Power Failure
+## Monitored Components
 
-### Timeline
+Monitor:
 
-#### Minute 0
+- UPS Health
+- Battery Status
+- Input Voltage
+- Runtime Remaining
+- Load Percentage
+- UPS Connectivity
+- Shutdown Events
+
+Reference:
+
+MONITORING-AND-ALERTING.md
+
+---
+
+## Alert Conditions
+
+Generate alerts for:
+
+- Utility Power Failure
+- Low Battery
+- Battery Failure
+- UPS Failure
+- UPS Communication Failure
+- High UPS Load
+- NUT Service Failure
+
+Classification:
 
 ```text
-Commercial Power Lost
+Critical
 ```
+
+---
+
+# Power Failure Procedure
+
+## Utility Failure
+
+### Phase 1
+
+Commercial Power Lost
 
 Actions:
 
 - UPS Systems Transition To Battery
 - Monitoring Generates Alert
+- NUT Begins Runtime Tracking
 
 ---
 
-#### Minute 1-4
+### Phase 2
 
-```text
-Observe Runtime
-```
+Observation Window
 
 Actions:
 
-- Wait For Power Restoration
-- Continue Monitoring
+- Monitor Runtime
+- Monitor Load
+- Await Utility Restoration
+
+Purpose:
+
+Avoid unnecessary shutdowns during short-duration outages.
 
 ---
 
-#### Minute 5
+### Phase 3
 
-```text
-Shutdown Sequence Begins
-```
+Controlled Shutdown Decision
 
-Based on approved design decision.
+Triggered by:
+
+- Runtime Threshold Reached
+- Low Battery Condition
+- Extended Outage
+
+Actions:
+
+- Begin Automated Shutdown Sequence
 
 ---
 
@@ -223,15 +316,26 @@ Based on approved design decision.
 
 ## Phase 1
 
-Stop Non-Essential Workloads
+Stop Tier 3 Services
 
-Examples:
+Services:
 
 - Plex
-- Audiobookshelf
-- ARR Stack
-- MeTube
 - Tautulli
+- MeTube
+- qBittorrent
+- Sonarr
+- Radarr
+- Lidarr
+- Readarr
+- Bazarr
+- Prowlarr
+- Overseerr
+- Gluetun
+
+Purpose:
+
+Reduce load and preserve runtime.
 
 ---
 
@@ -241,9 +345,17 @@ Shutdown JAX
 
 Purpose:
 
-```text
-Protect Application Data
-```
+Protect application data.
+
+Affected Services:
+
+- Vaultwarden
+- Immich
+- Nextcloud
+- Paperless-ngx
+- BookStack
+- Audiobookshelf
+- Navidrome
 
 ---
 
@@ -251,27 +363,35 @@ Protect Application Data
 
 Shutdown Infrastructure Hosts
 
-Order:
+Recommended Order:
 
 ```text
 MAX
+        ↓
 DAX
+        ↓
 PAX
 ```
+
+Purpose:
+
+Preserve service integrity while protecting storage infrastructure.
 
 ---
 
 ## Phase 4
 
-Keep Network Infrastructure Online
+Maintain Network Infrastructure
 
-Until battery capacity no longer allows operation.
-
-Devices:
+Keep online for as long as practical:
 
 - UDM-Pro
-- Switches
-- Access Points
+- Core Switching
+- Wireless Infrastructure
+
+Purpose:
+
+Maintain visibility and recovery access.
 
 ---
 
@@ -281,6 +401,12 @@ Devices:
 
 Verify Utility Power Stability.
 
+Confirm:
+
+- Utility Power Restored
+- Voltage Stable
+- No Active Power Events
+
 ---
 
 ## Phase 2
@@ -289,24 +415,25 @@ Verify UPS Status.
 
 Confirm:
 
-- Batteries healthy
-- No active alarms
-- Runtime normal
+- No UPS Alarms
+- Battery Status Healthy
+- Runtime Restored
+- Communication Functional
 
 ---
 
 ## Phase 3
 
-Restore Core Infrastructure
+Restore Network Infrastructure
 
 Order:
 
 ```text
 UDM-Pro
-
-Switches
-
-Access Points
+        ↓
+Switching
+        ↓
+Wireless
 ```
 
 ---
@@ -319,11 +446,11 @@ Order:
 
 ```text
 PAX
-
+        ↓
 DAX
-
+        ↓
 MAX
-
+        ↓
 JAX
 ```
 
@@ -331,17 +458,97 @@ JAX
 
 ## Phase 5
 
-Validate Services
+Validate Critical Services
 
-Critical Services:
+Tier 1 Services:
 
-- DNS
-- Storage
+- AdGuard
+- OpenMediaVault
 - Vaultwarden
-- Immich
 - Home Assistant
-- Paperless
+- Immich
+- Paperless-ngx
 - Nextcloud
+- BookStack
+
+Reference:
+
+RECOVERY-TIME-OBJECTIVES.md
+
+---
+
+## Phase 6
+
+Validate Tier 2 Services
+
+- Homepage
+- Uptime Kuma
+- Audiobookshelf
+- Navidrome
+- Syncthing
+
+---
+
+## Phase 7
+
+Validate Tier 3 Services
+
+- Plex
+- ARR Platform
+- Tautulli
+- MeTube
+- Stirling-PDF
+
+---
+
+# Recovery Priorities
+
+## Tier 1
+
+Restore First.
+
+Services:
+
+- DNS Services
+- OpenMediaVault
+- Vaultwarden
+- Home Assistant
+- Immich
+- Paperless-ngx
+- Nextcloud
+- BookStack
+
+---
+
+## Tier 2
+
+Restore Second.
+
+Services:
+
+- Homepage
+- Uptime Kuma
+- Audiobookshelf
+- Navidrome
+- Syncthing
+
+---
+
+## Tier 3
+
+Restore Third.
+
+Services:
+
+- Plex
+- ARR Platform
+- Tautulli
+- MeTube
+- Stirling-PDF
+
+Reference:
+
+RECOVERY-TIME-OBJECTIVES.md
 
 ---
 
@@ -362,7 +569,7 @@ No Shutdown Required
 Expected Result:
 
 ```text
-Controlled Shutdown
+Controlled Service Shutdown
 ```
 
 ---
@@ -372,47 +579,8 @@ Controlled Shutdown
 Expected Result:
 
 ```text
-Full Power Down
-```
-
-with clean recovery.
-
----
-
-# Monitoring Requirements
-
-## Monitor
-
-### UPS Health
-
-- Battery Status
-- Input Voltage
-- Runtime Remaining
-- Load Percentage
-
----
-
-### Alerts
-
-Send notifications for:
-
-- Power Failure
-- Battery Failure
-- UPS Communication Failure
-- Low Battery
-- High Load
-
----
-
-## Notification Methods
-
-- Email
-- Mobile Notifications
-
-Reference:
-
-```text
-MONITORING-AND-ALERTING.md
+Complete Infrastructure Shutdown
+Clean Recovery
 ```
 
 ---
@@ -423,9 +591,11 @@ MONITORING-AND-ALERTING.md
 
 Verify:
 
-- Battery Status
-- UPS Connectivity
+- UPS Status
+- Battery Health
 - Runtime Estimates
+- UPS Connectivity
+- Alerting
 
 ---
 
@@ -434,154 +604,168 @@ Verify:
 Perform:
 
 - NUT Validation
-- Shutdown Testing
-- Alert Testing
+- Alert Validation
+- Shutdown Validation
+- Recovery Procedure Review
+
+Reference:
+
+OPERATIONS-RUNBOOK.md
 
 ---
 
-## Annually
+## Annual
 
-Review:
+Perform:
 
-- Load Capacity
-- Battery Health
-- Runtime Performance
+- Controlled Shutdown Test
+- Recovery Exercise
+- Runtime Review
+- Capacity Review
 
----
+Reference:
 
-# Load Management
-
-## Current Status
-
-| Item | Status |
-|----------|----------|
-| Device-to-UPS Mapping | Pending |
-| Load Calculations | Pending |
-| Runtime Estimates | Pending |
-
----
-
-## Future Documentation
-
-This document should be updated to include:
-
-- UPS Assignments
-- Device Wattage
-- Load Percentages
-- Runtime Calculations
-
-once deployment is finalized.
-
----
-
-# Power Recovery Priorities
-
-## Priority 1
-
-Restore:
-
-- UDM-Pro
-- Switching
-- DNS
-
----
-
-## Priority 2
-
-Restore:
-
-- OpenMediaVault
-- Storage Services
-
----
-
-## Priority 3
-
-Restore:
-
-- Vaultwarden
-- Immich
-- Home Assistant
-- Paperless
-- Nextcloud
-
----
-
-## Priority 4
-
-Restore:
-
-- Plex
-- Audiobookshelf
-- ARR Stack
+DISASTER-RECOVERY.md
 
 ---
 
 # Failure Scenarios
 
+## Utility Power Loss
+
+Impact:
+
+```text
+Temporary Battery Operation
+```
+
+Response:
+
+Execute standard power failure process.
+
+---
+
 ## UPS Failure
 
-### Response
+Impact:
 
-1. Identify Failed UPS
-2. Move Critical Devices
-3. Replace UPS
-4. Validate Monitoring
+```text
+Reduced Protection Capacity
+```
+
+Response:
+
+- Identify Failed Unit
+- Reassign Critical Loads
+- Replace UPS
+- Validate Monitoring
 
 ---
 
 ## Battery Failure
 
-### Response
+Impact:
 
-1. Replace Battery
-2. Run Self-Test
-3. Validate Runtime
+```text
+Reduced Runtime Protection
+```
+
+Response:
+
+- Replace Battery
+- Perform Self-Test
+- Verify Runtime
 
 ---
 
 ## NUT Failure
 
-### Response
+Impact:
 
-1. Restore Monitoring
-2. Validate Communication
-3. Test Notifications
+```text
+Loss Of Automated UPS Management
+```
+
+Response:
+
+- Restore NUT Service
+- Validate Communication
+- Validate Alerting
 
 ---
 
-# Related Documents
+# Operational Readiness Requirements
 
-- RACK-LAYOUT.md
-- CABLING.md
-- STORAGE-ARCHITECTURE.md
-- BACKUP-AND-RESTORE.md
-- DISASTER-RECOVERY.md
-- OPERATIONS-RUNBOOK.md
+Power infrastructure is operationally ready when:
+
+✅ UPS Systems Operational
+
+✅ NUT Operational
+
+✅ Monitoring Operational
+
+✅ Shutdown Procedures Documented
+
+✅ Recovery Procedures Documented
+
+✅ Recovery Validation Current
+
+Reference:
+
+- service-readiness-matrix.md
+- operations-readiness-assessment.md
+
+---
+
+# Certification Requirements
+
+Power infrastructure certification requires:
+
+✅ UPS Monitoring Operational
+
+✅ NUT Operational
+
+✅ Alerting Validated
+
+✅ Shutdown Procedures Tested
+
+✅ Recovery Procedures Tested
+
+✅ Annual Validation Performed
+
+Reference:
+
+ENVIRONMENT-CERTIFICATION.md
 
 ---
 
 # Validation Checklist
 
 - [ ] UPS Inventory Verified
-- [ ] UPS Locations Verified
-- [ ] NUT Installed
-- [ ] NUT Reporting Runtime
-- [ ] Power Failure Alert Tested
-- [ ] Low Battery Alert Tested
-- [ ] Graceful Shutdown Tested
-- [ ] Recovery Procedure Tested
+- [ ] NUT Operational
+- [ ] Runtime Reporting Functional
+- [ ] Power Failure Alerts Tested
+- [ ] Low Battery Alerts Tested
+- [ ] Shutdown Sequence Validated
+- [ ] Recovery Procedures Validated
+- [ ] Documentation Current
 
 ---
 
-# Open Decisions
+# Success Criteria
 
-| Decision | Status |
-|----------|----------|
-| Final Device-to-UPS Mapping | Pending |
-| Load Calculations | Pending |
-| Runtime Calculations | Pending |
-| Automatic Startup Validation | Pending |
+The power and UPS architecture is considered operational when:
+
+- UPS Protection Is Operational
+- Critical Infrastructure Is Protected
+- Monitoring Is Operational
+- NUT Is Operational
+- Graceful Shutdown Functions
+- Recovery Procedures Are Validated
+- Certification Requirements Are Met
+- Documentation Reflects Reality
+
+Power protection is a foundational infrastructure capability and must remain aligned with operational, recovery, and certification requirements.
 
 ---
 
@@ -589,4 +773,5 @@ Restore:
 
 | Version | Date | Author | Notes |
 |----------|----------|----------|----------|
+| 2.0 | 2026-10-22 | Eric Yacoub | Rewritten to align with service inventory, recovery architecture, operational readiness framework, monitoring standards, and certification model |
 | 1.0 | 2026-10-22 | Eric Yacoub | Initial Power and UPS Architecture |

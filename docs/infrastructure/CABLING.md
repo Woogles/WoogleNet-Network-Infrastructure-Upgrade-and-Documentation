@@ -1,82 +1,115 @@
-# Cabling
+# CABLING
 
 ## Purpose
 
 This document serves as the authoritative reference for structured cabling within the WoogleNet environment.
 
-The goals of this document are:
+The purpose of this document is to:
 
-- Track cable runs
-- Track patch panel assignments
-- Track room connectivity
-- Standardize labeling
-- Simplify troubleshooting
-- Support future expansion
+- Document Physical Network Connectivity
+- Document Patch Panel Infrastructure
+- Document Room Connectivity
+- Define Labeling Standards
+- Support Troubleshooting
+- Support Maintenance Activities
+- Support Rack Documentation
+- Support Network Recovery
+- Support Operational Readiness
+- Support Certification Activities
 
-This document should be updated whenever cabling is added, moved, relabeled, or removed.
+This document records known cabling information while providing standards and procedures for maintaining cabling documentation accuracy.
 
----
+Reference Documents:
 
-# Cabling Standards
-
-## Cabling Type
-
-| Property | Value |
-|----------|----------|
-| Cable Type | Cat6 |
-| Fiber Present | No |
-| Patch Panels Installed | Yes |
-| Cable Management Installed | Yes |
-| Current Labeling | Partially Complete |
-
----
-
-# Design Principles
-
-## Standards
-
-1. Every cable should have a unique identifier.
-2. Every wall jack should map to a patch panel port.
-3. Every patch panel port should be documented.
-4. Active switch ports should be documented.
-5. Future AP drops should be reserved and tracked.
-6. Cable labels should exist on both ends.
+- ARCHITECTURE.md
+- NETWORK-ARCHITECTURE.md
+- RACK-LAYOUT.md
+- HARDWARE-INVENTORY.md
+- POWER-AND-UPS.md
+- OPERATIONS-RUNBOOK.md
+- ENVIRONMENT-CERTIFICATION.md
 
 ---
 
 # Cabling Architecture
 
-## Overview
+## High-Level Architecture
 
 ```text
-Wall Drops
-     │
-     ▼
-Patch Panels
-     │
-     ▼
-Switches
-     │
-     ▼
+Wall Jack
+      ↓
+Patch Panel
+      ↓
+Switch Port
+      ↓
+Network Services
+```
+
+All permanent structured cabling follows this design.
+
+---
+
+# Design Principles
+
+## Core Principles
+
+1. Every Cable Must Have An Identifier
+2. Every Wall Jack Must Be Documented
+3. Every Patch Panel Must Be Documented
+4. Every Active Switch Port Should Be Identifiable
+5. Labels Must Exist At Both Ends
+6. Documentation Must Reflect Reality
+7. Cabling Must Support Recovery Activities
+8. Cabling Must Support Future Expansion
+
+---
+
+# Cabling Standards
+
+## Cable Type
+
+| Property | Value |
+|----------|----------|
+| Cable Type | Cat6 |
+| Fiber Infrastructure | None Documented |
+| Patch Panels Installed | Yes |
+| Cable Management Installed | Yes |
+| Status | Operational |
+
+---
+
+## Labeling Requirements
+
+All structured cabling should be:
+
+- Physically Labeled
+- Traceable
+- Documented
+- Recoverable
+
+---
+
+# Structured Cabling Overview
+
+## Cabling Flow
+
+```text
+Device
+      ↓
+Wall Jack
+      ↓
+Horizontal Cabling
+      ↓
+Patch Panel
+      ↓
+Switch
+      ↓
 Network Services
 ```
 
 ---
 
-# Cabling Inventory
-
-## Estimated Installed Drops
-
-| Type | Count |
-|----------|----------|
-| Wall Drops | ~25 |
-| Dedicated AP Drops | 2 |
-| Future AP Locations | TBD |
-| Fiber Links | 0 |
-
----
-
-# Room Connectivity
+# Network Rooms & Connectivity
 
 ## Office
 
@@ -86,13 +119,11 @@ Network Services
 4
 ```
 
-### Usage
+Typical Devices:
 
-Examples:
-
-- Desktop
-- Docking Station
-- Printer
+- Desktop Systems
+- Docking Stations
+- Printers
 - Future Expansion
 
 ---
@@ -105,13 +136,11 @@ Examples:
 4
 ```
 
-### Usage
+Typical Devices:
 
-Examples:
-
-- Media Streamers
 - Smart TV
-- Gaming Devices
+- Streaming Devices
+- Gaming Platforms
 - Future Expansion
 
 ---
@@ -166,111 +195,95 @@ Examples:
 
 ---
 
-# Wireless Infrastructure Drops
+# Wireless Infrastructure Cabling
 
-## Upstairs Hall
+## Access Point Drop 01
 
-### Purpose
+Location:
 
 ```text
-Dedicated Access Point
+Upstairs Hall
 ```
 
-### Status
-
-Installed
-
----
-
-## Main Room
-
-### Purpose
+Purpose:
 
 ```text
-Dedicated Access Point
-```
-
-### Status
-
-Installed
-
----
-
-# Future Access Point Locations
-
-Additional APs may use existing wall drops.
-
-### Status
-
-```text
-TBD
-```
-
----
-
-# Patch Panel Layout
-
-## Patch Panel 01
-
-Rack Location:
-
-```text
-U02
+Wireless Access Point
 ```
 
 Status:
 
 ```text
-Requires Mapping
+Operational
 ```
+
+---
+
+## Access Point Drop 02
+
+Location:
+
+```text
+Main Room
+```
+
+Purpose:
+
+```text
+Wireless Access Point
+```
+
+Status:
+
+```text
+Operational
+```
+
+---
+
+# Patch Panel Infrastructure
+
+## Patch Panel 01
+
+| Property | Value |
+|----------|----------|
+| Rack Location | U02 |
+| Purpose | Structured Cabling Termination |
+| Status | Operational |
 
 ---
 
 ## Patch Panel 02
 
-Rack Location:
-
-```text
-U04
-```
-
-Status:
-
-```text
-Requires Mapping
-```
+| Property | Value |
+|----------|----------|
+| Rack Location | U04 |
+| Purpose | Structured Cabling Termination |
+| Status | Operational |
 
 ---
 
 ## Patch Panel 03
 
-Rack Location:
-
-```text
-U06
-```
-
-Status:
-
-```text
-Requires Mapping
-```
+| Property | Value |
+|----------|----------|
+| Rack Location | U06 |
+| Purpose | Structured Cabling Termination |
+| Status | Operational |
 
 ---
 
 ## Patch Panel 04
 
-Rack Location:
+| Property | Value |
+|----------|----------|
+| Rack Location | U08 |
+| Purpose | Structured Cabling Termination |
+| Status | Operational |
 
-```text
-U08
-```
+Reference:
 
-Status:
-
-```text
-Requires Mapping
-```
+RACK-LAYOUT.md
 
 ---
 
@@ -278,7 +291,7 @@ Requires Mapping
 
 ## Switch 01
 
-Rack Location:
+Location:
 
 ```text
 U03
@@ -286,15 +299,19 @@ U03
 
 Purpose:
 
-- Infrastructure
-- Patch Panel Uplinks
-- Servers
+- Infrastructure Systems
+- Server Connectivity
+- Core Network Functions
+
+Reference:
+
+RACK-LAYOUT.md
 
 ---
 
 ## Switch 02
 
-Rack Location:
+Location:
 
 ```text
 U05
@@ -303,28 +320,38 @@ U05
 Purpose:
 
 - Client Devices
-- Wireless Connectivity
-- Future Expansion
+- Wireless Infrastructure
+- User Connectivity
+
+Reference:
+
+RACK-LAYOUT.md
 
 ---
 
-## Switch 03
+## Auxiliary Switch
 
-Rack Location:
+Location:
 
 ```text
 U07
 ```
 
+Purpose:
+
+```text
+Expansion Capacity
+```
+
 Status:
 
 ```text
-Reserved / Future Use
+Reserved
 ```
 
 ---
 
-# Labeling Standard
+# Labeling Standards
 
 ## Patch Panel Labels
 
@@ -336,6 +363,12 @@ PP01-02
 PP01-03
 ```
 
+Pattern:
+
+```text
+PP##-##
+```
+
 ---
 
 ## Wall Jack Labels
@@ -345,13 +378,18 @@ Format:
 ```text
 OFF-01
 OFF-02
-OFF-03
 
 LR-01
 LR-02
 
 BR1-01
 BR2-01
+```
+
+Pattern:
+
+```text
+LOCATION-##
 ```
 
 ---
@@ -368,9 +406,9 @@ AP-03
 
 ---
 
-# Recommended Room Labels
+# Room Label Standard
 
-| Location | Prefix |
+| Area | Prefix |
 |----------|----------|
 | Office | OFF |
 | Living Room | LR |
@@ -379,28 +417,78 @@ AP-03
 | Bedroom 3 | BR3 |
 | Bedroom 4 | BR4 |
 | Bedroom 5 | BR5 |
-| Upstairs Hall AP | AP01 |
-| Main Room AP | AP02 |
+| Access Point 01 | AP01 |
+| Access Point 02 | AP02 |
 
 ---
 
-# Current Documentation Status
+# Cabling Documentation Standard
+
+## Required Mapping Model
+
+The preferred documentation hierarchy is:
+
+```text
+Wall Jack
+      ↓
+Patch Panel Port
+      ↓
+Switch Port
+      ↓
+VLAN
+```
+
+---
+
+## Required Mapping Information
+
+For each active connection document:
+
+- Device Location
+- Wall Jack Label
+- Patch Panel Port
+- Switch Port
+- VLAN Assignment
+
+Reference:
+
+NETWORK-ARCHITECTURE.md
+
+---
+
+# Documentation Status
 
 ## Verified
 
-- Rack Patch Panel Locations
-- Switch Locations
-- Approximate Drop Count
-- AP Drop Locations
+The following information is currently documented:
+
+✅ Patch Panel Locations
+
+✅ Switch Locations
+
+✅ Rack Locations
+
+✅ AP Drop Locations
+
+✅ Room Connectivity Inventory
+
+✅ Labeling Standard
 
 ---
 
-## Requires Verification
+## Requires Physical Audit
 
-- Patch Panel Port Mapping
-- Wall Jack Numbering
-- Active Switch Port Assignments
-- Unlabeled Cable Identification
+The following information should be verified and documented through a future cabling audit:
+
+⏳ Patch Panel Port Mapping
+
+⏳ Wall Jack Mapping
+
+⏳ Active Switch Port Assignments
+
+⏳ Cable Identification Verification
+
+⏳ End-to-End Physical Trace Validation
 
 ---
 
@@ -408,89 +496,227 @@ AP-03
 
 ## Step 1
 
-Identify unlabeled drops.
+Identify Unknown Or Unlabeled Drops.
 
 ---
 
 ## Step 2
 
-Tone and trace cable.
+Trace Physical Cabling.
+
+Techniques:
+
+- Visual Inspection
+- Network Testing
+- Cable Toner
 
 ---
 
 ## Step 3
 
-Confirm room termination.
+Document:
+
+- Wall Jack
+- Patch Panel Port
+- Switch Port
+
+Relationships.
 
 ---
 
 ## Step 4
 
-Apply label at both ends.
+Apply Labels At Both Ends.
 
 ---
 
 ## Step 5
 
-Update documentation.
+Update Documentation.
+
+Reference:
+
+DOCUMENTATION-GOVERNANCE-STANDARD.md
 
 ---
 
-# Future Improvements
+# Color Coding Standard
 
-## Recommended
-
-- Complete cable labeling
-- Document switch ports
-- Document patch panel mappings
-- Reserve AP locations
-- Color-code patch cables
-
----
-
-## Suggested Cable Colors
+## Recommended Usage
 
 | Function | Color |
 |----------|----------|
 | Infrastructure | Red |
 | Servers | Blue |
 | Access Points | Yellow |
-| Trusted Client Connections | White |
-| IoT | Green |
-| Guest | Gray |
+| Trusted Clients | White |
+| IoT Devices | Green |
+| Guest Access | Gray |
 
 ---
 
-# Pending Tasks
+# Recovery Considerations
 
-- [ ] Map Patch Panel 01
-- [ ] Map Patch Panel 02
-- [ ] Map Patch Panel 03
-- [ ] Map Patch Panel 04
-- [ ] Label Unlabeled Drops
-- [ ] Validate All AP Drops
-- [ ] Document Switch Port Usage
-- [ ] Create Final Port Map
+## Cabling Recovery Priority
+
+Physical recovery should occur in the following order:
+
+```text
+Power
+      ↓
+Network Infrastructure
+      ↓
+Patch Panels
+      ↓
+Switching
+      ↓
+Endpoints
+```
+
+Reference:
+
+DISASTER-RECOVERY.md
 
 ---
 
-# Open Decisions
+## Critical Components
 
-| Item | Status |
-|----------|----------|
-| Final Patch Panel Mapping | Pending |
-| Future AP Locations | Pending |
-| Switch Port Documentation | Pending |
-| Color Standard Adoption | Pending |
+The following cabling components support Tier 1 recovery:
+
+- Patch Panel Infrastructure
+- Core Switching
+- UDM-Pro Connectivity
+- Server Connectivity
+- Access Point Connectivity
 
 ---
 
-# Related Documents
+# Maintenance Requirements
 
-- RACK-LAYOUT.md
-- NETWORK-TOPOLOGY.md
-- IP-ADDRESS-PLAN.md
-- POWER-AND-UPS.md
+## Monthly
+
+Verify:
+
+- Cable Management Integrity
+- Visible Label Integrity
+- Rack Connectivity
+
+---
+
+## Quarterly
+
+Verify:
+
+- Patch Panel Documentation
+- Switch Documentation
+- AP Connectivity
+
+---
+
+## Annual
+
+Perform:
+
+- Cabling Audit
+- Label Validation
+- Documentation Review
+
+Reference:
+
+OPERATIONS-RUNBOOK.md
+
+---
+
+# Operational Readiness Requirements
+
+Structured cabling is considered operationally ready when:
+
+✅ Patch Panels Documented
+
+✅ Switch Locations Documented
+
+✅ AP Connectivity Documented
+
+✅ Labeling Standard Defined
+
+✅ Audit Procedure Defined
+
+Reference:
+
+operations-readiness-assessment.md
+
+---
+
+# Certification Requirements
+
+Cabling certification requires:
+
+✅ Patch Panels Documented
+
+✅ Core Switching Documented
+
+✅ Access Point Connectivity Documented
+
+✅ Labeling Standard Established
+
+✅ Audit Process Defined
+
+✅ Documentation Current
+
+Reference:
+
+ENVIRONMENT-CERTIFICATION.md
+
+---
+
+# Validation Checklist
+
+## Infrastructure
+
+- [ ] Patch Panel 01 Verified
+- [ ] Patch Panel 02 Verified
+- [ ] Patch Panel 03 Verified
+- [ ] Patch Panel 04 Verified
+
+---
+
+## Switching
+
+- [ ] Switch 01 Verified
+- [ ] Switch 02 Verified
+- [ ] Auxiliary Switch Verified
+
+---
+
+## Wireless
+
+- [ ] AP-01 Connectivity Verified
+- [ ] AP-02 Connectivity Verified
+
+---
+
+## Documentation
+
+- [ ] Labeling Standard Current
+- [ ] Room Inventory Current
+- [ ] Rack Locations Current
+- [ ] Mapping Audit Current
+
+---
+
+# Success Criteria
+
+The cabling program is considered current when:
+
+- Patch Panel Infrastructure Is Documented
+- Switch Infrastructure Is Documented
+- Wireless Connectivity Is Documented
+- Labeling Standards Are Applied
+- Audit Procedures Are Defined
+- Recovery Dependencies Are Understood
+- Documentation Reflects Reality
+
+Structured cabling is foundational infrastructure and must remain aligned with network architecture, rack layout, recovery requirements, and operational governance.
 
 ---
 
@@ -498,4 +724,5 @@ Update documentation.
 
 | Version | Date | Author | Notes |
 |----------|----------|----------|----------|
+| 2.0 | 2026-10-22 | Eric Yacoub | Rewritten as structured cabling inventory, cabling standard, operational readiness control, and certification artifact |
 | 1.0 | 2026-10-22 | Eric Yacoub | Initial Cabling Documentation |

@@ -1,20 +1,36 @@
-# Monitoring and Alerting
+# MONITORING-AND-ALERTING
 
 ## Purpose
 
 This document defines the monitoring, alerting, notification, and observability standards for the WoogleNet environment.
 
-The goals of monitoring are:
+The objectives of monitoring are to:
 
-- Detect service outages
-- Detect infrastructure failures
-- Detect storage issues
-- Detect DNS issues
-- Detect certificate expiration
-- Improve recovery time
-- Provide visibility into system health
+- Detect Infrastructure Failures
+- Detect Storage Failures
+- Detect DNS Failures
+- Detect Service Outages
+- Detect Backup Failures
+- Detect Certificate Issues
+- Improve Recovery Time
+- Support Operational Awareness
+- Support Disaster Recovery
+- Support Operational Readiness
+- Support Environment Certification
 
-This document should be updated whenever services or infrastructure are added, removed, or modified.
+Monitoring is a required operational capability for all production services.
+
+Reference Documents:
+
+- ARCHITECTURE.md
+- SERVICE-INVENTORY.md
+- SERVICE-DEPENDENCIES.md
+- OPERATIONS-RUNBOOK.md
+- DISASTER-RECOVERY.md
+- RECOVERY-TIME-OBJECTIVES.md
+- service-readiness-matrix.md
+- operations-readiness-assessment.md
+- ENVIRONMENT-CERTIFICATION.md
 
 ---
 
@@ -22,13 +38,44 @@ This document should be updated whenever services or infrastructure are added, r
 
 ## Core Principles
 
-1. Alert on actionable issues.
-2. Avoid alert fatigue.
-3. Monitor critical dependencies first.
-4. Prioritize service availability.
-5. Critical services must be monitored.
-6. Monitoring should help recovery.
-7. A monitored service should have an owner.
+1. Monitor Critical Dependencies First
+2. Alerts Must Be Actionable
+3. Critical Services Require Monitoring
+4. Monitoring Must Support Recovery
+5. Monitoring Must Reduce Detection Time
+6. Monitoring Must Avoid Alert Fatigue
+7. Every Alert Must Have An Owner
+8. Monitoring Must Reflect Service Criticality
+9. Monitoring Coverage Must Be Documented
+10. Monitoring Must Support Certification Activities
+
+---
+
+# Monitoring Architecture
+
+## Monitoring Flow
+
+```text
+Infrastructure
+        ↓
+Storage
+        ↓
+DNS
+        ↓
+Core Services
+        ↓
+Application Services
+        ↓
+Backup Systems
+        ↓
+Recovery Validation
+```
+
+The monitoring hierarchy follows service dependency order.
+
+Reference:
+
+SERVICE-DEPENDENCIES.md
 
 ---
 
@@ -39,15 +86,21 @@ This document should be updated whenever services or infrastructure are added, r
 Purpose:
 
 ```text
-Status Dashboard
+Operational Dashboard
 ```
 
 Responsibilities:
 
-- Service Links
-- Infrastructure Overview
-- Visual Status
-- Service Grouping
+- Service Visibility
+- Administrative Access Links
+- Service Organization
+- Operational Overview
+
+Status:
+
+```text
+Production
+```
 
 ---
 
@@ -56,21 +109,28 @@ Responsibilities:
 Purpose:
 
 ```text
-Active Monitoring
+Monitoring
 Alerting
 Notification Delivery
 ```
 
 Responsibilities:
 
+- Endpoint Monitoring
 - Availability Monitoring
 - DNS Monitoring
 - Certificate Monitoring
 - Alert Delivery
 
+Status:
+
+```text
+Production
+```
+
 ---
 
-# Notification Methods
+# Notification Architecture
 
 ## Primary
 
@@ -88,64 +148,95 @@ Mobile Notifications
 
 ---
 
-## Future State
+## Alert Requirements
 
-```text
-Webhook Automation
-AI Analysis
-Event Correlation
-```
+Alerts should provide:
 
-Status:
-
-```text
-Future Review
-```
+- Service Name
+- Failure Type
+- Severity
+- Impact Assessment
+- Recovery Reference
 
 ---
 
-# Monitoring Classifications
+# Service Classifications
 
 ## Critical
 
-Failure requires immediate attention.
+Immediate Action Required.
 
-Examples:
+These services align with Tier 1 recovery requirements.
 
-- UDM-Pro
+Services:
+
+- AdGuard Primary
+- AdGuard Secondary
 - OpenMediaVault
-- AdGuard
-- Immich
 - Vaultwarden
 - Home Assistant
+- Immich
 - Paperless-ngx
 - Nextcloud
+- BookStack
+
+Response Target:
+
+```text
+Immediate
+```
 
 ---
 
 ## Important
 
-Failure should be addressed promptly.
+Investigate Promptly.
 
-Examples:
+These services align with Tier 2 recovery requirements.
+
+Services:
 
 - Homepage
 - Uptime Kuma
 - Audiobookshelf
-- BookStack
+- Navidrome
 - Syncthing
+
+Response Target:
+
+```text
+Same Day
+```
 
 ---
 
-## Low Priority
+## Standard
 
-Failure can be addressed when convenient.
+Review As Practical.
 
-Examples:
+These services align with Tier 3 recovery requirements.
 
-- MeTube
+Services:
+
+- Plex
 - Tautulli
-- ARR Stack Components
+- MeTube
+- qBittorrent
+- Sonarr
+- Radarr
+- Lidarr
+- Readarr
+- Bazarr
+- Prowlarr
+- Overseerr
+- Gluetun
+- Stirling-PDF
+
+Response Target:
+
+```text
+Best Effort
+```
 
 ---
 
@@ -153,12 +244,13 @@ Examples:
 
 ## UDM-Pro
 
-### Checks
+Checks:
 
 - Ping
 - HTTPS Availability
+- Management Interface
 
-### Alert Level
+Classification:
 
 ```text
 Critical
@@ -168,13 +260,13 @@ Critical
 
 ## DAX
 
-### Checks
+Checks:
 
 - Ping
 - HTTPS Availability
-- Proxmox Web Interface
+- Proxmox Interface
 
-### Alert Level
+Classification:
 
 ```text
 Critical
@@ -184,13 +276,13 @@ Critical
 
 ## MAX
 
-### Checks
+Checks:
 
 - Ping
 - HTTPS Availability
-- Proxmox Web Interface
+- Proxmox Interface
 
-### Alert Level
+Classification:
 
 ```text
 Critical
@@ -200,13 +292,13 @@ Critical
 
 ## PAX
 
-### Checks
+Checks:
 
 - Ping
 - HTTPS Availability
-- Proxmox Web Interface
+- Proxmox Interface
 
-### Alert Level
+Classification:
 
 ```text
 Critical
@@ -216,13 +308,13 @@ Critical
 
 ## JAX
 
-### Checks
+Checks:
 
 - Ping
 - SSH Response
 - Docker Availability
 
-### Alert Level
+Classification:
 
 ```text
 Critical
@@ -234,21 +326,29 @@ Critical
 
 ## OpenMediaVault
 
-### Checks
+Checks:
 
 - Ping
 - Web Interface
 - Storage Availability
+- Share Availability
+- Mount Status
+- SMART Health
+- Capacity Utilization
 
-### Alert Level
+Classification:
 
 ```text
 Critical
 ```
 
+Reference:
+
+STORAGE-ARCHITECTURE.md
+
 ---
 
-## Storage Capacity
+## Capacity Monitoring
 
 ### Warning Threshold
 
@@ -262,18 +362,21 @@ Critical
 90%
 ```
 
+Capacity planning should begin before critical thresholds are reached.
+
 ---
 
 # DNS Monitoring
 
 ## AdGuard Primary
 
-### Checks
+Checks:
 
 - DNS Resolution
-- HTTP Availability
+- Web Interface
+- Upstream DNS Connectivity
 
-### Alert Level
+Classification:
 
 ```text
 Critical
@@ -283,22 +386,27 @@ Critical
 
 ## AdGuard Secondary
 
-### Checks
+Checks:
 
 - DNS Resolution
-- HTTP Availability
+- Web Interface
+- Upstream DNS Connectivity
 
-### Alert Level
+Classification:
 
 ```text
 Critical
 ```
 
+Reference:
+
+DNS-ARCHITECTURE.md
+
 ---
 
-## DNS Test Domains
+## Resolution Validation
 
-Examples:
+Monitor successful resolution of:
 
 ```text
 google.com
@@ -306,17 +414,41 @@ microsoft.com
 github.com
 ```
 
+along with internal service endpoints.
+
 ---
 
-# Service Monitoring
+# Remote Access Monitoring
+
+## Tailscale
+
+Checks:
+
+- Device Connectivity
+- Tailnet Connectivity
+- Administrative Access Availability
+
+Classification:
+
+```text
+Critical
+```
+
+Reference:
+
+VPN-ARCHITECTURE.md
+
+---
+
+# Core Operations Monitoring
 
 ## Homepage
 
-### Checks
+Checks:
 
-- HTTP Availability
+- HTTPS Availability
 
-### Alert Level
+Classification:
 
 ```text
 Important
@@ -326,136 +458,84 @@ Important
 
 ## Uptime Kuma
 
-### Checks
+Checks:
 
-- HTTP Availability
+- HTTPS Availability
 
-### Alert Level
+Classification:
 
 ```text
 Important
-```
-
----
-
-## Immich
-
-### Checks
-
-- HTTP Availability
-- Login Page
-- Database Connectivity
-
-### Alert Level
-
-```text
-Critical
-```
-
-### Data Classification
-
-```text
-Critical
 ```
 
 ---
 
 ## Vaultwarden
 
-### Checks
+Checks:
 
-- HTTP Availability
-- Login Page
+- HTTPS Availability
+- Login Page Availability
 
-### Alert Level
+Classification:
 
 ```text
 Critical
 ```
 
+Recovery Tier:
+
+```text
+Tier 1
+```
+
 ---
 
-## Home Assistant
+# Media Platform Monitoring
 
-### Checks
+## Immich
 
-- Web Interface
-- Login Response
+Checks:
 
-### Alert Level
+- HTTPS Availability
+- Login Interface
+
+Classification:
 
 ```text
 Critical
 ```
 
----
-
-## Nextcloud
-
-### Checks
-
-- HTTPS Availability
-- Login Page
-
-### Alert Level
+Recovery Tier:
 
 ```text
-Critical
-```
-
----
-
-## Paperless-ngx
-
-### Checks
-
-- HTTPS Availability
-- Login Page
-
-### Alert Level
-
-```text
-Critical
-```
-
----
-
-## BookStack
-
-### Checks
-
-- HTTPS Availability
-
-### Alert Level
-
-```text
-Important
-```
-
----
-
-## Audiobookshelf
-
-### Checks
-
-- HTTPS Availability
-
-### Alert Level
-
-```text
-Important
+Tier 1
 ```
 
 ---
 
 ## Plex
 
-### Checks
+Checks:
 
 - HTTPS Availability
 - Remote Access Availability
 
-### Alert Level
+Classification:
+
+```text
+Standard
+```
+
+---
+
+## Audiobookshelf
+
+Checks:
+
+- HTTPS Availability
+
+Classification:
 
 ```text
 Important
@@ -463,91 +543,193 @@ Important
 
 ---
 
-# ARR Stack Monitoring
+## Navidrome
 
-## qBittorrent
+Checks:
 
-Alert Level:
+- HTTPS Availability
+
+Classification:
 
 ```text
-Low
+Important
 ```
 
 ---
 
-## Sonarr
+## Tautulli
 
-Alert Level:
+Checks:
+
+- HTTPS Availability
+
+Classification:
 
 ```text
-Low
+Standard
 ```
 
 ---
 
-## Radarr
+## MeTube
 
-Alert Level:
+Checks:
+
+- HTTPS Availability
+
+Classification:
 
 ```text
-Low
+Standard
 ```
 
 ---
 
-## Lidarr
+# Knowledge Platform Monitoring
 
-Alert Level:
+## Paperless-ngx
+
+Checks:
+
+- HTTPS Availability
+- Login Interface
+
+Classification:
 
 ```text
-Low
+Critical
+```
+
+Recovery Tier:
+
+```text
+Tier 1
 ```
 
 ---
 
-## Readarr
+## Nextcloud
 
-Alert Level:
+Checks:
+
+- HTTPS Availability
+- Login Interface
+
+Classification:
 
 ```text
-Low
+Critical
+```
+
+Recovery Tier:
+
+```text
+Tier 1
 ```
 
 ---
 
-## Prowlarr
+## BookStack
 
-Alert Level:
+Checks:
+
+- HTTPS Availability
+
+Classification:
 
 ```text
-Low
+Critical
+```
+
+Recovery Tier:
+
+```text
+Tier 1
 ```
 
 ---
 
-## Bazarr
+## Syncthing
 
-Alert Level:
+Checks:
+
+- HTTPS Availability
+
+Classification:
 
 ```text
-Low
+Important
 ```
 
 ---
 
-## Overseerr
+## Stirling-PDF
 
-Alert Level:
+Checks:
+
+- HTTPS Availability
+
+Classification:
 
 ```text
-Low
+Standard
+```
+
+---
+
+# Automation Platform Monitoring
+
+## Home Assistant
+
+Checks:
+
+- HTTPS Availability
+- Login Interface
+- API Response
+
+Classification:
+
+```text
+Critical
+```
+
+Recovery Tier:
+
+```text
+Tier 1
+```
+
+---
+
+## ARR Platform
+
+Services:
+
+- qBittorrent
+- Sonarr
+- Radarr
+- Lidarr
+- Readarr
+- Bazarr
+- Prowlarr
+- Overseerr
+- Gluetun
+
+Checks:
+
+- HTTPS Availability
+
+Classification:
+
+```text
+Standard
 ```
 
 ---
 
 # Certificate Monitoring
 
-## Monitor For
+## Monitor
 
 - Expiration
 - Renewal Failures
@@ -575,38 +757,51 @@ Low
 
 ## Kopia
 
-Monitor:
+Checks:
 
-- Successful Backups
-- Failed Backups
+- Backup Completion
+- Backup Failure
 - Repository Availability
+- Repository Integrity
 
----
-
-## OneDrive
-
-Monitor:
-
-- Sync Completion
-- Sync Failures
-
----
-
-## Alert Level
+Classification:
 
 ```text
 Critical
 ```
 
-for failed backups.
+---
+
+## OneDrive Replication
+
+Checks:
+
+- Synchronization Completion
+- Synchronization Failure
+
+Classification:
+
+```text
+Critical
+```
+
+Reference:
+
+BACKUP-AND-RESTORE.md
 
 ---
 
 # Security Monitoring
 
-## Failed Login Attempts
+## Authentication Monitoring
 
 Monitor where supported:
+
+- Failed Login Attempts
+- Authentication Errors
+- Excessive Login Activity
+
+Applies To:
 
 - Vaultwarden
 - Home Assistant
@@ -614,22 +809,17 @@ Monitor where supported:
 
 ---
 
-## Fail2Ban
+## Tailnet Monitoring
 
 Monitor:
 
-- Active Bans
-- Ban Rate
-
----
-
-## Tailscale
-
-Monitor:
-
-- Device Enrollment
+- Authorized Devices
 - Device Health
-- Connectivity
+- Connectivity Status
+
+Reference:
+
+VPN-ARCHITECTURE.md
 
 ---
 
@@ -641,37 +831,44 @@ Immediate Action Required.
 
 Examples:
 
-- UDM-Pro Offline
+- UDM-Pro Failure
 - DNS Failure
 - OpenMediaVault Failure
-- Immich Failure
+- AdGuard Failure
 - Vaultwarden Failure
+- Home Assistant Failure
+- Immich Failure
+- Paperless Failure
+- Nextcloud Failure
 - Backup Failure
 
 ---
 
 ## Priority 2
 
-Investigate Promptly.
+Investigation Required.
 
 Examples:
 
-- Plex Failure
-- Home Assistant Failure
 - Homepage Failure
 - Uptime Kuma Failure
+- Audiobookshelf Failure
+- Navidrome Failure
+- Syncthing Failure
 
 ---
 
 ## Priority 3
 
-Review As Time Permits.
+Review As Practical.
 
 Examples:
 
-- ARR Failures
-- MeTube Failure
+- Plex Failure
+- ARR Stack Failure
 - Tautulli Failure
+- MeTube Failure
+- Stirling-PDF Failure
 
 ---
 
@@ -684,164 +881,19 @@ Examples:
 - MAX
 - PAX
 - JAX
-- OpenMediaVault
 
 ---
 
-## Core Services
+## Network Services
 
 - AdGuard Primary
 - AdGuard Secondary
-- Homepage
-- Uptime Kuma
+- Tailscale
 
 ---
 
-## Family Services
+## Storage Platform
 
-- Immich
-- Plex
-- Audiobookshelf
-- Vaultwarden
-
----
-
-## Knowledge Platform
-
-- Nextcloud
-- Paperless
-- BookStack
-- Syncthing
-
----
-
-## Media Automation
-
-- qBittorrent
-- Sonarr
-- Radarr
-- Lidarr
-- Readarr
-- Bazarr
-- Prowlarr
-- Overseerr
-
----
-
-# Monitoring Review Schedule
-
-## Weekly
-
-Review:
-
-- Failed Alerts
-- Service Status
-- Backup Status
-
----
-
-## Monthly
-
-Review:
-
-- Storage Usage
-- DNS Performance
-- Monitoring Coverage
-
----
-
-## Quarterly
-
-Review:
-
-- Alert Quality
-- Notification Delivery
-- Monitoring Accuracy
-
----
-
-# Alert Response Procedure
-
-## Step 1
-
-Validate outage.
-
----
-
-## Step 2
-
-Determine scope.
-
-```text
-Infrastructure
-Storage
-DNS
-Service
-```
-
----
-
-## Step 3
-
-Review dependencies.
-
-Reference:
-
-```text
-SERVICE-DEPENDENCIES.md
-```
-
----
-
-## Step 4
-
-Recover service.
-
-Reference:
-
-```text
-DISASTER-RECOVERY.md
-OPERATIONS-RUNBOOK.md
-```
-
----
-
-## Step 5
-
-Document findings.
-
----
-
-# Open Decisions
-
-| Decision | Status |
-|----------|----------|
-| Centralized Logging Platform | Future Review |
-| Grafana Deployment | Future Review |
-| Prometheus Deployment | Future Review |
-| AI-Assisted Alert Analysis | Future Review |
-| Webhook Automation | Future Review |
-
----
-
-# Monitoring Coverage Checklist
-
-- [ ] UDM-Pro Monitoring
-- [ ] DAX Monitoring
-- [ ] MAX Monitoring
-- [ ] PAX Monitoring
-- [ ] JAX Monitoring
-- [ ] OMV Monitoring
-- [ ] DNS Monitoring
-- [ ] Backup Monitoring
-- [ ] Certificate Monitoring
-- [ ] Family Service Monitoring
-- [ ] Notification Validation
-
----
-
-# Revision History
-
-| Version | Date | Author | Notes |
-|----------|----------|----------|----------|
-| 1.0 | 2026-10-22 | Eric Yacoub | Initial Monitoring and Alerting Strategy |
+- OpenMediaVault
+- Kopia
+- OneDrive Replication

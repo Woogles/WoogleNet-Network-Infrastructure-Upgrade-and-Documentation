@@ -1,335 +1,210 @@
-# Hardware Inventory
+# HARDWARE-INVENTORY
 
 ## Purpose
 
-This document serves as the authoritative inventory for all physical infrastructure within the WoogleNet environment.
+This document serves as the authoritative inventory for all physical infrastructure supporting the WoogleNet environment.
 
 The purpose of this document is to:
 
 - Track physical assets
-- Track hardware specifications
-- Document infrastructure roles
+- Track infrastructure roles
+- Support operational planning
 - Support capacity planning
+- Support lifecycle management
 - Support disaster recovery planning
-- Support hardware replacement and upgrades
+- Support certification reviews
+- Support hardware replacement processes
 
-This document should be updated whenever hardware is added, removed, repurposed, or upgraded.
+This document should reflect the current production environment.
+
+Reference Documents:
+
+- ARCHITECTURE.md
+- STORAGE-ARCHITECTURE.md
+- NETWORK-ARCHITECTURE.md
+- DISASTER-RECOVERY.md
+- service-readiness-matrix.md
+- ENVIRONMENT-CERTIFICATION.md
 
 ---
 
 # Infrastructure Summary
 
-## Physical Device Inventory
+## Physical Asset Inventory
 
 | Category | Quantity |
-|-----------|----------|
+|-----------|-----------|
 | Gateway | 1 |
 | Managed Switches | 2 |
 | Wireless Access Points | 7 |
 | Proxmox Hosts | 3 |
 | Ubuntu Hosts | 1 |
+| NAS Platforms | 1 |
 | UPS Units | 5 |
 
 ---
 
-# Network Infrastructure
+# Environment Infrastructure
 
-## WoogleNetRouter01
+## Network Layer
 
-| Property | Value |
-|----------|---------|
-| Device Type | Gateway |
-| Model | UniFi Dream Machine Pro |
-| Status | Installed |
-| Deployment State | Operational |
-| Management Platform | UniFi Network |
-| Purpose | Routing, Firewall, DHCP, VLAN Management |
-
-### Notes
-
-- Primary Internet gateway
-- VLAN gateway
-- DHCP provider
-- Firewall platform
-
----
-
-# Switching Infrastructure
-
-## WoogleNetSwitch01
-
-| Property | Value |
-|----------|---------|
-| Model | TP-Link TL-SG1024DE |
-| Ports | 24 |
-| Status | Installed |
-| Deployment State | Operational |
-| Configuration Status | Pending Review |
-
----
-
-## WoogleNetSwitch02
-
-| Property | Value |
-|----------|---------|
-| Model | TP-Link TL-SG1024DE |
-| Ports | 24 |
-| Status | Installed |
-| Deployment State | Operational |
-| Configuration Status | Pending Review |
-
----
-
-# Wireless Infrastructure
-
-## UniFi AC LR Access Points
-
-| Property | Value |
-|----------|---------|
-| Model | UniFi AC LR |
-| Quantity | 4 |
-| Status | Installed |
-| Configuration Status | Pending Review |
-
----
-
-## UniFi AC Pro Access Points
-
-| Property | Value |
-|----------|---------|
-| Model | UniFi AC Pro |
-| Quantity | 3 |
-| Status | Installed |
-| Configuration Status | Pending Review |
+| Device | Role | Status |
+|----------|----------|----------|
+| UDM-Pro | Gateway, Routing, Firewall, DHCP | Operational |
+| TP-Link Switch 01 | Core Switching | Operational |
+| TP-Link Switch 02 | Core Switching | Operational |
+| UniFi Wireless Infrastructure | Wireless Access | Operational |
 
 ---
 
 # Compute Infrastructure
 
-## Virtualization Platform
+## Platform Overview
 
-### Design Decisions
-
-| Item | Decision |
-|--------|--------|
-| Hypervisor | Proxmox VE |
-| Clustering | No |
-| Shared Storage | No |
-| Live Migration | No |
-| High Availability | No |
-| Storage Model | Local Storage |
-| Recovery Strategy | Restore/Rebuild |
+| Host | Platform | Role | Status |
+|----------|----------|----------|----------|
+| DAX | Proxmox VE | Infrastructure Host | Operational |
+| MAX | Proxmox VE | Infrastructure Host | Operational |
+| PAX | Proxmox VE | Storage Host | Operational |
+| JAX | Ubuntu Server | Application Host | Operational |
 
 ---
 
-## DAX
+# DAX
 
-### Purpose
-
-Primary virtualization host.
-
-### Hardware
+## Host Information
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Platform | Dell PowerEdge R720 |
 | Operating System | Proxmox VE |
-| CPU | Intel Xeon E5-2620 |
-| Memory | 188 GB |
-| RAID Controller | PERC H700 |
-| Drive Bays | 12 |
-| Installed Drives | 12 |
-| Network Interfaces | 4 x Intel 1GbE |
-| Status | Planned |
+| Primary Role | Infrastructure Services |
+| Status | Operational |
+| Monitoring | Enabled |
+| Backup Coverage | Configuration Backups |
+| Recovery Documented | Yes |
 
-### Storage Configuration
+### Hosted Services
 
-| Property | Value |
-|----------|---------|
-| Physical Disks | TBD |
-| RAID Layout | TBD |
-| Virtual Disk Layout | TBD |
-| Proxmox Storage Pools | TBD |
-| Usable Capacity | TBD |
+- AdGuard Primary
+- Homepage
+- Uptime Kuma
 
 ---
 
-## MAX
+# MAX
 
-### Purpose
-
-Secondary virtualization host.
-
-### Hardware
+## Host Information
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Platform | Dell PowerEdge R720 |
 | Operating System | Proxmox VE |
-| CPU | Intel Xeon E5-2620 |
-| Memory | 188 GB |
-| RAID Controller | PERC H700 |
-| Drive Bays | 12 |
-| Installed Drives | 12 |
-| Network Interfaces | 4 x Intel 1GbE |
-| Status | Planned |
+| Primary Role | Infrastructure Services |
+| Status | Operational |
+| Monitoring | Enabled |
+| Backup Coverage | Configuration Backups |
+| Recovery Documented | Yes |
 
-### Storage Configuration
+### Hosted Services
 
-| Property | Value |
-|----------|---------|
-| Physical Disks | TBD |
-| RAID Layout | TBD |
-| Virtual Disk Layout | TBD |
-| Proxmox Storage Pools | TBD |
-| Usable Capacity | TBD |
+- AdGuard Secondary
+- Home Assistant
 
 ---
 
-## PAX
+# PAX
 
-### Purpose
-
-Additional virtualization host.
-
-### Hardware
+## Host Information
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Platform | Dell PowerEdge R720 |
 | Operating System | Proxmox VE |
-| CPU | Intel Xeon E5-2620 |
-| Memory | 188 GB |
-| RAID Controller | PERC H700 |
-| Drive Bays | 12 |
-| Installed Drives | 12 |
-| Network Interfaces | 4 x Intel 1GbE |
-| Status | Planned |
+| Primary Role | Storage Services |
+| Status | Operational |
+| Monitoring | Enabled |
+| Backup Coverage | Configuration Backups |
+| Recovery Documented | Yes |
 
-### Storage Configuration
+### Hosted Services
 
-| Property | Value |
-|----------|---------|
-| Physical Disks | TBD |
-| RAID Layout | TBD |
-| Virtual Disk Layout | TBD |
-| Proxmox Storage Pools | TBD |
-| Usable Capacity | TBD |
+- OpenMediaVault
 
 ---
 
-# Docker and AI Platform
+# JAX
 
-## JAX
-
-### Purpose
-
-Primary Ubuntu host for:
-
-- Docker services
-- Core infrastructure services
-- Self-hosted applications
-- AI workloads
-- Local LLM inference
-
-### Hardware
+## Host Information
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Operating System | Ubuntu Server |
-| CPU | Intel Xeon E5-2667 v3 |
-| Memory | 32 GB |
-| Network Interfaces | 1 x Intel 1GbE |
-| SSD Count | 2 |
-| SSD Size | 500 GB Each |
-| Storage Layout | Independent Disks |
-| Status | Planned |
+| Primary Role | Application Platform |
+| Status | Operational |
+| Monitoring | Enabled |
+| Backup Coverage | Yes |
+| Recovery Documented | Yes |
+
+### Hosted Service Categories
+
+- Media Platform
+- Automation Platform
+- Knowledge Platform
+- Security Platform
+- Backup Platform
 
 ---
 
-## GPU Resources
+# GPU Resources
 
-### GPU-01
+## GPU-01
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Model | NVIDIA RTX 3060 |
 | VRAM | 12 GB |
-| Installed | Yes |
 | Primary Usage | AI Inference |
+| Status | Operational |
 
 ---
 
-### GPU-02
+## GPU-02
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Model | NVIDIA GTX 1070 |
 | VRAM | 8 GB |
-| Installed | Yes |
 | Primary Usage | AI Inference |
+| Status | Operational |
 
 ---
 
-## AI Storage
+# Storage Infrastructure
+
+## Storage Platform
 
 | Property | Value |
-|----------|---------|
-| Ollama Storage Location | Local SSD |
-| Model Repository | Local |
-| Backup Strategy | TBD |
-| Expansion Plan | TBD |
-
----
-
-## Known Constraints
-
-| Constraint | Notes |
-|------------|---------|
-| System RAM | 32 GB |
-| AI Storage | Local SSD Only |
-| GPU Redundancy | None |
-| Central AI Storage | Not Planned |
-| Model Backup Strategy | TBD |
-
----
-
-# Storage Platform
-
-## NAS Platform
-
-### Current Design Direction
-
-| Property | Value |
-|----------|---------|
+|----------|----------|
 | Platform | OpenMediaVault |
+| Host | PAX |
 | Deployment Type | Virtual Machine |
-| Host Platform | Proxmox |
-| Status | Planned |
+| Status | Operational |
 
 ---
 
-### Storage Design
-
-| Item | Status |
-|--------|--------|
-| RAID Layout | TBD |
-| Storage Pools | TBD |
-| NAS Capacity | TBD |
-| Backup Repository | TBD |
-| Offsite Backup Target | TBD |
-| Media Storage Layout | TBD |
-| Application Storage Layout | TBD |
-
----
-
-### Planned Functions
+## Storage Functions
 
 - Application Storage
 - Media Storage
-- Backup Repository
-- Shared File Storage
-- Future Archive Storage
+- Document Storage
+- Backup Repository Storage
+- Shared Storage
+
+Reference:
+
+- STORAGE-ARCHITECTURE.md
+- STORAGE-MAP.md
 
 ---
 
@@ -340,89 +215,152 @@ Primary Ubuntu host for:
 ### Tripp Lite SMART1500LCD
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Quantity | 3 |
 | Capacity | 1500VA |
 | Output Power | 900W |
-| Form Factor | Rack Mount |
-| Status | Installed |
+| Status | Operational |
 
 ---
 
 ### APC Back-UPS Pro
 
 | Property | Value |
-|----------|---------|
+|----------|----------|
 | Quantity | 2 |
 | Capacity | 1500VA |
 | Output Power | 900W |
-| Status | Installed |
+| Status | Operational |
 
 ---
 
-## Planned UPS Management
+## UPS Management
 
-| Item | Value |
-|--------|--------|
-| Platform | NUT (Network UPS Tools) |
-| Status | Planned |
-| Shutdown Automation | Planned |
-| Monitoring Integration | Planned |
+| Property | Value |
+|----------|----------|
+| Platform | NUT |
+| Monitoring | Enabled |
+| Shutdown Automation | Configured |
+| Operational Status | Active |
 
 ---
 
-# System Status Summary
+# Hardware Recovery Classification
 
-| System | Status | Deployment State |
+## Tier 1 Critical Components
+
+Recovery Priority:
+
+Immediate
+
+Components:
+
+- UDM-Pro
+- OpenMediaVault
+- PAX
+- DAX
+- MAX
+- JAX
+
+---
+
+## Tier 2 Important Components
+
+Recovery Priority:
+
+72 Hours
+
+Components:
+
+- Core Switching
+- Wireless Infrastructure
+- UPS Management
+
+---
+
+# Single Points of Failure
+
+| Component | Impact | Mitigation |
 |----------|----------|----------|
-| UDM-Pro | Installed | Operational |
-| Switches | Installed | Operational |
-| Access Points | Installed | Operational |
-| DAX | Available | Planned |
-| MAX | Available | Planned |
-| PAX | Available | Planned |
-| JAX | Available | Planned |
-| OpenMediaVault | Planned | Not Deployed |
-| UPS Infrastructure | Installed | Operational |
+| UDM-Pro | Network Loss | Configuration Backups |
+| PAX | Storage Loss | Kopia + OneDrive Protection |
+| OpenMediaVault | Storage Services Loss | Recovery Procedures |
+| Internet Service | Remote Access Impact | Local Operations Continue |
+| JAX | Application Platform Loss | Backup And Recovery Procedures |
+
+Reference:
+
+DISASTER-RECOVERY.md
 
 ---
 
-# Pending Decisions
+# Monitoring Coverage
 
-## Storage
+The following infrastructure must be monitored:
 
-| Decision | Status |
-|------------|----------|
-| DAX RAID Layout | Pending |
-| MAX RAID Layout | Pending |
-| PAX RAID Layout | Pending |
-| NAS Storage Layout | Pending |
-| Backup Repository Sizing | Pending |
-| Media Storage Layout | Pending |
+- UDM-Pro
+- DAX
+- MAX
+- PAX
+- JAX
+- OpenMediaVault
+- AdGuard
+- Homepage
+- Uptime Kuma
+- Critical Services
 
----
+Reference:
 
-## AI Platform
-
-| Decision | Status |
-|------------|----------|
-| Ollama Backup Strategy | Pending |
-| Model Retention Strategy | Pending |
-| Future GPU Expansion | Pending |
-| Vector Database Platform | Pending |
-| Long-Term AI Storage Strategy | Pending |
+service-readiness-matrix.md
 
 ---
 
-## Networking
+# Lifecycle Management
 
-| Decision | Status |
-|------------|----------|
-| VLAN Design | Pending |
-| VLAN Numbers | Pending |
-| IP Address Plan | Pending |
-| Firewall Implementation | Pending |
-| AP Placement Validation | Pending |
+Hardware inventory updates are required when:
+
+- Equipment Added
+- Equipment Removed
+- Equipment Replaced
+- Host Roles Changed
+- Capacity Increased
+- Infrastructure Retired
+
+Reference:
+
+DOCUMENTATION-GOVERNANCE-STANDARD.md
+
+---
+
+# Annual Review Requirements
+
+Review:
+
+- Asset Inventory Accuracy
+- Capacity Utilization
+- Hardware Lifecycle Status
+- Recovery Readiness
+- Monitoring Coverage
+- Replacement Planning
+
+Reference:
+
+SECURITY-AUDIT-PROGRAM.md
+
+---
+
+# Success Criteria
+
+This document is considered current when:
+
+- All infrastructure assets are recorded
+- Host roles are accurate
+- Recovery classifications are assigned
+- Monitoring coverage is documented
+- Operational status reflects reality
+- Lifecycle records are maintained
+
+Documentation must always reflect the current production environment.
 
 ---
 
@@ -430,4 +368,4 @@ Primary Ubuntu host for:
 
 | Version | Date | Author | Notes |
 |----------|----------|----------|----------|
-| 1.0 | 2026-10-22 | Eric Yacoub | Initial Hardware Inventory |
+| 2.0 | 2026-10-22 | Eric Yacoub | Reconciled with completed Sprint 01-10 program, operational readiness framework, governance standards, and certification model |

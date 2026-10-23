@@ -1,33 +1,68 @@
-# Storage Architecture
+# STORAGE-ARCHITECTURE
 
 ## Purpose
 
-This document defines the storage architecture, storage responsibilities, data classifications, storage locations, and storage strategy for the WoogleNet environment.
+This document serves as the authoritative storage architecture reference for the WoogleNet environment.
 
-The goals of the storage architecture are:
+The purpose of this document is to:
 
-- Centralize persistent storage
-- Protect critical data
-- Support media services
-- Support backup operations
-- Simplify recovery procedures
-- Minimize storage-related service interruptions
+- Define storage design
+- Define storage ownership
+- Define storage allocation
+- Define data classification
+- Define backup requirements
+- Define recovery requirements
+- Support operational readiness reviews
+- Support disaster recovery planning
+- Support certification activities
 
-This document should be reviewed before modifying storage layouts, creating new datasets, or deploying storage-dependent services.
+The storage platform provides centralized data services for all production systems within WoogleNet.
+
+Reference Documents:
+
+- ARCHITECTURE.md
+- HARDWARE-INVENTORY.md
+- SERVICE-INVENTORY.md
+- STORAGE-MAP.md
+- BACKUP-AND-RESTORE.md
+- DISASTER-RECOVERY.md
+- RECOVERY-TIME-OBJECTIVES.md
 
 ---
 
-# Architecture Overview
+# Design Principles
 
-## Design Principles
+The storage architecture is built on the following principles:
 
-1. Critical data must be recoverable.
-2. Services should be separated from their data.
-3. Rebuildable components should not consume backup resources.
-4. Application data should reside on centralized storage whenever practical.
-5. Media services should share a common storage structure.
-6. Future storage growth should not require architectural redesign.
-7. Unknown storage decisions should remain documented as TBD.
+1. Centralized Storage
+2. Data Protection First
+3. Backup Before Change
+4. Simplicity Over Complexity
+5. Recovery Over High Availability
+6. Shared Storage Where Appropriate
+7. Documentation Must Reflect Reality
+
+---
+
+# Storage Overview
+
+## High-Level Architecture
+
+```text
+Applications
+      │
+      ▼
+Shared Storage
+(OpenMediaVault)
+      │
+      ▼
+Backup Repository
+(Kopia)
+      │
+      ▼
+Offsite Replication
+(OneDrive)
+```
 
 ---
 
@@ -36,132 +71,90 @@ This document should be reviewed before modifying storage layouts, creating new 
 ## Primary Storage Platform
 
 | Property | Value |
-|-----------|----------|
+|----------|----------|
 | Platform | OpenMediaVault |
+| Host | PAX |
 | Deployment Type | Virtual Machine |
-| Host Platform | Proxmox |
-| Planned Host | PAX |
-| Status | Planned |
+| Status | Operational |
+| Monitoring | Enabled |
+| Backup Coverage | Enabled |
+| Recovery Classification | Tier 1 |
+
+Purpose:
+
+- Centralized Storage
+- Application Data
+- Media Storage
+- Documents
+- Backups
+- Shared File Storage
+
+Reference:
+
+SERVICE-INVENTORY.md
 
 ---
 
-## Storage Backend
+# Storage Functions
 
-| Property | Value |
-|-----------|----------|
-| Physical Host | PAX |
-| RAID Controller | PERC H700 |
-| Disk Count | 12 |
-| RAID Layout | TBD |
-| Storage Pools | TBD |
-| Usable Capacity | TBD |
-| Expansion Strategy | TBD |
+The storage platform provides the following functions.
 
----
+## Application Storage
 
-# Storage Tiers
+Stores:
 
-## Tier 1 - Critical Data
-
-Data that would be difficult or impossible to replace.
-
-### Services
-
-- Immich
-- Vaultwarden
-- Paperless-ngx
-- Nextcloud
-- BookStack
-- Home Assistant
-
-### Backup Requirement
-
-```text
-Required
-```
-
-### Recovery Priority
-
-```text
-Highest
-```
+- Container Volumes
+- Application Configuration
+- Databases
+- Service Data
 
 ---
 
-## Tier 2 - Important Data
+## Media Storage
 
-Data that is valuable but can be recreated.
+Stores:
 
-### Services
-
-- Audiobookshelf
-- Navidrome
-- ARR Applications
-- Uptime Kuma
-- Homepage
-
-### Backup Requirement
-
-```text
-Recommended
-```
-
-### Recovery Priority
-
-```text
-Medium
-```
+- Movies
+- Television
+- Music
+- Audiobooks
 
 ---
 
-## Tier 3 - Rebuildable Data
+## Photo Storage
 
-Services that can be redeployed from source configuration.
+Stores:
 
-### Services
-
-- AdGuard Home
-- Docker Containers
-- qBittorrent
-- Plex Configuration
-
-### Backup Requirement
-
-```text
-Recommended
-```
-
-### Recovery Priority
-
-```text
-Low
-```
+- Family Photos
+- Mobile Uploads
+- Image Archives
 
 ---
 
-## Tier 4 - Disposable Data
+## Document Storage
 
-Temporary content that does not require backup.
+Stores:
 
-### Examples
+- Paperless Archives
+- BookStack Assets
+- Nextcloud Data
+- General Documents
 
-- Docker Images
-- Temporary Downloads
-- Cache Data
-- Thumbnail Caches
-- Application Scratch Space
+---
 
-### Backup Requirement
+## Backup Storage
 
-```text
-Not Required
-```
+Stores:
+
+- Kopia Repository
+- Recovery Archives
+- Configuration Backups
 
 ---
 
 # Storage Layout
 
-## Root Structure
+## Logical Structure
 
 ```text
 /storage
@@ -169,335 +162,488 @@ Not Required
 ├── appdata
 ├── backups
 ├── documents
+├── downloads
 ├── media
 ├── photos
-├── downloads
-├── books
-├── music
-├── homeassistant
-└── ai
+└── homeassistant
 ```
+
+Reference:
+
+STORAGE-MAP.md
 
 ---
 
-# Application Storage
+# Service Storage Mapping
 
-## AppData
+## Core Infrastructure Services
 
-Purpose:
+| Service | Storage Required |
+|----------|----------|
+| AdGuard | Yes |
+| Homepage | Yes |
+| Uptime Kuma | Yes |
+| Vaultwarden | Yes |
+
+---
+
+## Media Platform
+
+| Service | Storage Location |
+|----------|----------|
+| Plex | media |
+| Audiobookshelf | media |
+| Immich | photos |
+| Navidrome | media |
+| Tautulli | appdata |
+| MeTube | downloads |
+
+---
+
+## Automation Platform
+
+| Service | Storage Location |
+|----------|----------|
+| Home Assistant | homeassistant |
+| qBittorrent | downloads |
+| Sonarr | media |
+| Radarr | media |
+| Lidarr | media |
+| Readarr | media |
+| Bazarr | appdata |
+| Prowlarr | appdata |
+| Overseerr | appdata |
+| Gluetun | appdata |
+
+---
+
+## Knowledge Platform
+
+| Service | Storage Location |
+|----------|----------|
+| Paperless-ngx | documents |
+| Nextcloud | documents |
+| Syncthing | documents |
+| BookStack | appdata |
+| Stirling-PDF | documents |
+
+Reference:
+
+SERVICE-INVENTORY.md
+
+---
+
+# Data Classification
+
+## Critical Data
+
+Loss or corruption would significantly impact operations or family data.
+
+### Services
+
+- Vaultwarden
+- Immich
+- Home Assistant
+- Paperless-ngx
+- Nextcloud
+- BookStack
+
+Backup Frequency:
 
 ```text
-Application Configurations
-Databases
-Persistent Volumes
+Daily
 ```
 
-Path:
+Recovery Priority:
 
 ```text
-/storage/appdata
+Tier 1
 ```
 
 ---
 
-## Structure
+## Important Data
+
+Loss impacts functionality but recovery urgency is lower.
+
+### Services
+
+- Audiobookshelf
+- Navidrome
+- Syncthing
+- Homepage
+- Uptime Kuma
+
+Backup Frequency:
 
 ```text
-/storage/appdata
-│
-├── adguard
-├── uptime-kuma
-├── homepage
-├── vaultwarden
-├── paperless
-├── nextcloud
-├── bookstack
-├── audiobookshelf
-├── navidrome
-├── plex
-├── sonarr
-├── radarr
-├── lidarr
-├── readarr
-├── bazarr
-├── prowlarr
-├── qbittorrent
-└── overseerr
+Weekly
 ```
 
----
-
-# Media Storage
-
-## Root
+Recovery Priority:
 
 ```text
-/storage/media
+Tier 2
 ```
-
-Purpose:
-
-- Movies
-- Television
-- Music
-- Audiobooks
-- Books
 
 ---
 
-## Structure
+## Standard Data
+
+Important but recoverable with limited operational impact.
+
+### Services
+
+- Plex
+- Tautulli
+- Arr Platform
+
+Backup Frequency:
 
 ```text
-/storage/media
-│
-├── movies
-├── tv
-├── music
-├── audiobooks
-└── ebooks
+Weekly
 ```
 
----
-
-# Downloads
-
-## Root
+Recovery Priority:
 
 ```text
-/storage/downloads
+Tier 3
 ```
-
-Purpose:
-
-ARR stack download processing.
 
 ---
 
-## Structure
+## Rebuildable Data
+
+May be recreated without restore.
+
+Examples:
+
+- Docker Images
+- Cache Data
+- Temporary Downloads
+- Application Cache
+
+Backup Frequency:
 
 ```text
-/storage/downloads
-│
-├── incomplete
-├── complete
-└── watch
+Optional
 ```
 
----
-
-## Requirement
-
-All ARR services and qBittorrent must reference a common storage location to support hardlinks.
-
----
-
-# Photo Storage
-
-## Immich
-
-Path:
+Recovery Priority:
 
 ```text
-/storage/photos
-```
-
-Classification:
-
-```text
-Critical Data
-```
-
-Purpose:
-
-- Mobile backups
-- Family photos
-- Family videos
-
----
-
-## Approved Users
-
-- Eric
-- Beth
-- Amara
-
----
-
-## Notes
-
-Loss of this data may result in permanent loss of family photographs.
-
----
-
-# Document Storage
-
-## Paperless-ngx
-
-Path:
-
-```text
-/storage/documents
-```
-
-Contents:
-
-- Scanned Documents
-- PDFs
-- Receipts
-- Records
-- Archive Documents
-
----
-
-Classification:
-
-```text
-Critical Data
+Best Effort
 ```
 
 ---
 
-# Backup Storage
-
-## Repository Location
-
-Path:
-
-```text
-/storage/backups
-```
-
-Purpose:
-
-- Backup Storage
-- Restore Testing
-- Export Archives
-
----
+# Backup Architecture
 
 ## Backup Platform
 
-| Property | Value |
-|----------|----------|
-| Platform | TBD |
-| Repository Size | TBD |
-| Retention Policy | TBD |
-| Offsite Destination | TBD |
+Platform:
+
+```text
+Kopia
+```
+
+Purpose:
+
+- Encrypted Backups
+- Versioning
+- Recovery Support
+- Validation Testing
 
 ---
 
-# AI Storage
-
-## Local Model Storage
+## Local Repository
 
 Location:
 
 ```text
-JAX Local SSD
+OpenMediaVault
 ```
 
 Purpose:
 
-- Ollama Models
-- AI Runtime Data
-- AI Service Configuration
+- Primary Backup Repository
 
 ---
 
-## Long-Term Strategy
+## Offsite Protection
 
-| Item | Status |
-|----------|----------|
-| Model Backup Strategy | TBD |
-| Shared AI Storage | TBD |
-| Future Expansion | TBD |
+Platform:
 
----
+```text
+Microsoft OneDrive
+```
 
-# Service Storage Assignments
+Purpose:
 
-| Service | Storage Location |
-|----------|----------|
-| AdGuard Home | AppData |
-| Homepage | AppData |
-| Uptime Kuma | AppData |
-| Immich | Photos |
-| Audiobookshelf | Media |
-| Plex | Media |
-| qBittorrent | Downloads |
-| Sonarr | Media + Downloads |
-| Radarr | Media + Downloads |
-| Lidarr | Media + Downloads |
-| Readarr | Media + Downloads |
-| Bazarr | Media |
-| Overseerr | AppData |
-| Vaultwarden | AppData |
-| Home Assistant | HomeAssistant |
-| BookStack | Documents + AppData |
-| Paperless-ngx | Documents |
-| Nextcloud | Documents |
+- Disaster Recovery
+- Site Loss Protection
+- Offsite Retention
+
+Reference:
+
+BACKUP-AND-RESTORE.md
 
 ---
 
-# Storage Growth Strategy
+# Recovery Architecture
 
-## Current State
+## Recovery Philosophy
 
-| Item | Status |
-|----------|----------|
-| Final RAID Layout | TBD |
-| Final Capacity | TBD |
-| Pool Design | TBD |
+```text
+Recoverable
+Not Highly Available
+```
 
----
-
-## Planned Growth Areas
-
-- Media Libraries
-- Family Photos
-- AI Models
-- Document Archives
-- Backups
+Storage recovery is prioritized over redundancy complexity.
 
 ---
 
-# Recovery Priorities
+## Storage Recovery Priority
 
-| Priority | Services |
-|----------|----------|
-| Priority 1 | Vaultwarden, Immich, Paperless |
-| Priority 2 | Nextcloud, Home Assistant, BookStack |
-| Priority 3 | Plex, Audiobookshelf, ARR Stack |
-| Priority 4 | Homepage, Uptime Kuma |
-| Priority 5 | Rebuildable Services |
+### Tier 1
 
----
+Recover First:
 
-# Open Decisions
-
-| Decision | Status |
-|----------|----------|
-| RAID Layout | TBD |
-| Storage Pool Layout | TBD |
-| Filesystem Selection | TBD |
-| Backup Platform | TBD |
-| Backup Retention Policy | TBD |
-| Offsite Backup Destination | TBD |
-| Snapshot Strategy | TBD |
-| AI Model Backup Strategy | TBD |
+- OpenMediaVault
+- Storage Shares
+- Backup Repository
 
 ---
 
-# Design Constraints
+### Tier 2
 
-| Constraint | Notes |
-|----------|----------|
-| Immich Data | Critical |
-| Vaultwarden Data | Critical |
-| Home Assistant VM | Requires Backup |
-| ARR Hardlinks | Requires Shared Filesystem |
-| AI Models | Stored Locally on JAX |
-| No Shared Proxmox Storage | Confirmed Design |
+Recover Second:
+
+- Application Data
+- Media Services
+- Knowledge Platform
+
+---
+
+### Tier 3
+
+Recover Third:
+
+- Rebuildable Services
+- Temporary Storage
+
+Reference:
+
+RECOVERY-TIME-OBJECTIVES.md
+
+---
+
+# Capacity Management
+
+## Monitoring Requirements
+
+Monitor:
+
+- Capacity Utilization
+- Disk Health
+- Share Availability
+- Storage Performance
+- Backup Repository Health
+
+Platform:
+
+```text
+Uptime Kuma
+```
+
+---
+
+## Capacity Thresholds
+
+### Warning
+
+```text
+80% Utilization
+```
+
+---
+
+### Critical
+
+```text
+90% Utilization
+```
+
+Storage expansion planning should begin before critical thresholds are reached.
+
+---
+
+# Security Architecture
+
+## Access Control
+
+Storage access is controlled through:
+
+- Network Segmentation
+- Service Permissions
+- Administrative Controls
+- Tailscale Access
+
+Reference:
+
+SECURITY-BASELINE.md
+
+---
+
+## Administrative Access
+
+Permitted Through:
+
+```text
+Trusted VLAN
+Tailscale
+Physical Console
+```
+
+Reference:
+
+VPN-ARCHITECTURE.md
+
+---
+
+## Credential Management
+
+Administrative storage credentials must be stored in:
+
+```text
+Vaultwarden
+```
+
+Reference:
+
+CREDENTIAL-MANAGEMENT-STANDARD.md
+
+---
+
+# Monitoring Architecture
+
+## Monitored Components
+
+Monitor:
+
+- PAX
+- OpenMediaVault
+- Storage Shares
+- Disk Health
+- Backup Repository
+- OneDrive Replication
+
+---
+
+## Alert Conditions
+
+Generate alerts for:
+
+- Low Disk Space
+- Failed Storage Mounts
+- Disk Failures
+- Repository Failures
+- Replication Failures
+
+---
+
+# Disaster Recovery Considerations
+
+## Critical Dependencies
+
+Storage depends upon:
+
+```text
+Network
+      ↓
+PAX
+      ↓
+OpenMediaVault
+      ↓
+Storage Shares
+      ↓
+Applications
+```
+
+Reference:
+
+SERVICE-DEPENDENCIES.md
+
+---
+
+## Single Points of Failure
+
+| Component | Impact | Mitigation |
+|----------|----------|----------|
+| PAX | Storage Platform Loss | Recovery Procedures |
+| OpenMediaVault | Storage Service Loss | Recovery Documentation |
+| Disk Failure | Capacity Reduction | Monitoring & Replacement |
+| OneDrive | Offsite Protection Loss | Local Repository Retained |
+
+Reference:
+
+DISASTER-RECOVERY.md
+
+---
+
+# Operational Readiness Requirements
+
+Storage validation occurs during:
+
+- Service Readiness Reviews
+- Backup Validation Reviews
+- Restore Testing Exercises
+- Disaster Recovery Exercises
+- Production Readiness Reviews
+- Certification Reviews
+
+Reference Documents:
+
+- service-readiness-matrix.md
+- operations-readiness-assessment.md
+- disaster-recovery-exercise.md
+- production-readiness-review.md
+- ENVIRONMENT-CERTIFICATION.md
+
+---
+
+# Certification Requirements
+
+Storage certification requires:
+
+- OpenMediaVault Operational
+- Share Availability Verified
+- Backup Repository Operational
+- Offsite Replication Operational
+- Restore Validation Current
+- Monitoring Operational
+- Capacity Managed
+
+Reference:
+
+ENVIRONMENT-CERTIFICATION.md
+
+---
+
+# Success Criteria
+
+The storage architecture is considered operational when:
+
+- OpenMediaVault Is Operational
+- Storage Shares Are Available
+- Backup Repository Is Healthy
+- Offsite Replication Is Functional
+- Backup Validation Is Current
+- Restore Validation Is Current
+- Monitoring Is Operational
+- Documentation Reflects Reality
+
+Storage is a Tier 1 infrastructure service and must remain protected to support all dependent platforms.
 
 ---
 
@@ -505,4 +651,4 @@ Purpose:
 
 | Version | Date | Author | Notes |
 |----------|----------|----------|----------|
-| 1.0 | 2026-10-22 | Eric Yacoub | Initial Storage Architecture |
+| 1.0 | 2026-10-22 | Eric Yacoub | Initial storage architecture aligned with Sprint 01-10 implementation, recovery framework, operational readiness model, and certification program |

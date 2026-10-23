@@ -1,59 +1,112 @@
-# Operations Runbook
+# OPERATIONS-RUNBOOK
 
 ## Purpose
 
-This document defines the operational procedures used to manage, maintain, update, and recover the WoogleNet environment.
+This document defines the operational procedures used to manage, maintain, secure, monitor, validate, recover, and govern the WoogleNet environment.
 
-The goals of this runbook are:
+The purpose of this runbook is to:
 
-- Standardize administration
-- Reduce downtime
-- Maintain documentation accuracy
-- Simplify maintenance
-- Support recovery operations
-- Ensure repeatable procedures
+- Standardize Administration
+- Reduce Operational Risk
+- Support Security Governance
+- Support Documentation Governance
+- Support Recovery Operations
+- Support Readiness Reviews
+- Support Certification Reviews
+- Ensure Long-Term Sustainability
 
-This document should be reviewed annually and updated whenever operational processes change.
+This document serves as the primary operational guide for the WoogleNet environment.
+
+Reference Documents:
+
+- ARCHITECTURE.md
+- HARDWARE-INVENTORY.md
+- SERVICE-INVENTORY.md
+- DOCUMENT-INDEX.md
+- PROGRAM-STATUS.md
 
 ---
 
-# Operations Principles
+# Governance Framework
+
+Operations are governed through the following standards and programs.
+
+## Security Governance
+
+- SECURITY-BASELINE.md
+- MFA-STANDARD.md
+- SSH-STANDARD.md
+- CREDENTIAL-MANAGEMENT-STANDARD.md
+- SECURITY-AUDIT-PROGRAM.md
+
+---
+
+## Documentation Governance
+
+- DOCUMENTATION-GOVERNANCE-STANDARD.md
+- DOCUMENT-INDEX.md
+
+---
+
+## Recovery Governance
+
+- BACKUP-AND-RESTORE.md
+- DISASTER-RECOVERY.md
+- RECOVERY-TIME-OBJECTIVES.md
+
+---
+
+## Operational Governance
+
+- service-readiness-matrix.md
+- operations-readiness-assessment.md
+- production-readiness-review.md
+- operational-validation-report.md
+- ENVIRONMENT-CERTIFICATION.md
+
+---
+
+# Operational Principles
 
 ## Core Rules
 
 1. Documentation must reflect reality.
-2. Backups must exist before major changes.
-3. Critical changes should be tested when possible.
-4. Infrastructure credentials belong in Vaultwarden.
-5. Services should be monitored.
-6. Recovery procedures must remain documented.
-7. Simplicity is preferred over complexity.
+2. Security standards are mandatory.
+3. Backups must exist before major changes.
+4. Critical services must be monitored.
+5. Recovery procedures must remain current.
+6. Certification evidence must be maintained.
+7. Governance reviews must occur on schedule.
+8. Simplicity is preferred over unnecessary complexity.
+9. Changes must be documented.
+10. Recovery must be continuously validated.
 
 ---
 
 # Administrative Standards
 
-## Primary Administration Method
+## Approved Administrative Access
+
+Administrative access is permitted through:
 
 ```text
+Trusted VLAN
 Tailscale
-```
-
-Preferred order:
-
-```text
-Local Access
-    ↓
-Tailscale
-    ↓
 Physical Console
 ```
+
+Administrative access from the public Internet is prohibited.
+
+Reference:
+
+- SSH-STANDARD.md
+- VPN-ARCHITECTURE.md
 
 ---
 
 ## Credential Management
 
-All infrastructure credentials should be stored in:
+All administrative credentials shall be stored within:
 
 ```text
 Vaultwarden
@@ -67,139 +120,118 @@ Examples:
 - OpenMediaVault
 - Home Assistant
 - Tailscale
-- Service Administrative Accounts
+- Service Administration Accounts
+
+Reference:
+
+CREDENTIAL-MANAGEMENT-STANDARD.md
+
+---
+
+## MFA Requirements
+
+Administrative access requiring MFA includes:
+
+- Vaultwarden
+- Tailscale
+- Home Assistant Administration
+- Nextcloud Administration
+- Infrastructure Administration
+
+Reference:
+
+MFA-STANDARD.md
 
 ---
 
 # Change Management
 
-## Documentation Requirement
+## Change Philosophy
 
-Documentation updates are required when:
+Changes should be:
 
-- New service is deployed
-- Service is removed
-- Network configuration changes
-- Storage layout changes
-- New VLAN is created
-- Major upgrade performed
-- Critical hardware is replaced
+- Planned
+- Documented
+- Reversible
+- Recoverable
+
+Critical services should never be modified without a known recovery path.
 
 ---
 
-## Required Documents to Update
+## Documentation Requirements
+
+Documentation updates are required when:
+
+- Services Are Added
+- Services Are Removed
+- Infrastructure Changes
+- Security Controls Change
+- Storage Layout Changes
+- Recovery Procedures Change
+- Governance Processes Change
+
+Reference:
+
+DOCUMENTATION-GOVERNANCE-STANDARD.md
+
+---
+
+## Required Documentation Review
 
 Review as applicable:
 
 ```text
-README.md
+ARCHITECTURE.md
 HARDWARE-INVENTORY.md
 SERVICE-INVENTORY.md
-IP-ADDRESS-PLAN.md
-VLAN-PLAN.md
-NETWORK-TOPOLOGY.md
-FIREWALL-RULES.md
+SERVICE-DEPENDENCIES.md
 STORAGE-ARCHITECTURE.md
 STORAGE-MAP.md
+OPERATIONS-RUNBOOK.md
 ```
 
 ---
 
-# Service Deployment Standard
+## Change Validation
 
-## Preferred Platform Order
+Verify:
 
-### First Choice
+- Service Availability
+- Storage Connectivity
+- Monitoring Coverage
+- Backup Coverage
+- Documentation Accuracy
 
-```text
-LXC
-```
-
----
-
-### Second Choice
-
-```text
-Docker
-```
+Before closing the change.
 
 ---
 
-### Third Choice
+# Service Lifecycle Management
 
-```text
-Virtual Machine
-```
+## New Service Introduction
 
----
-
-## Selection Guidelines
-
-### Use LXC When
-
-- Application supports LXC
-- Minimal complexity
-- Lightweight service
-- Infrastructure focused
-
-Examples:
-
-- AdGuard
-- Homepage
-- Uptime Kuma
-
----
-
-### Use Docker When
-
-- Official containers exist
-- Multiple application dependencies exist
-- Application ecosystem expects Docker
-
-Examples:
-
-- Immich
-- Plex
-- Vaultwarden
-- BookStack
-- ARR Stack
-
----
-
-### Use VM When
-
-- Full OS isolation is preferred
-- Application officially recommends VM deployment
-- Appliance style application
-
-Examples:
-
-- Home Assistant
-- OpenMediaVault
-
----
-
-# New Service Deployment Procedure
-
-## Step 1
+### Step 1
 
 Review service requirements.
 
 Document:
 
 - Purpose
-- Storage requirements
-- Backup requirements
-- User access requirements
-- Network access requirements
+- Host Platform
+- Storage Requirements
+- Backup Requirements
+- Recovery Requirements
+- Security Requirements
+- Monitoring Requirements
 
 ---
 
-## Step 2
+### Step 2
 
-Determine hosting platform.
+Determine deployment location.
 
-Choose:
+Options:
 
 ```text
 LXC
@@ -207,9 +239,13 @@ Docker
 VM
 ```
 
+Reference:
+
+ARCHITECTURE.md
+
 ---
 
-## Step 3
+### Step 3
 
 Update Documentation
 
@@ -218,186 +254,143 @@ Required:
 ```text
 SERVICE-INVENTORY.md
 STORAGE-MAP.md
+SERVICE-DEPENDENCIES.md
 ```
 
 ---
 
-## Step 4
+### Step 4
 
-Implement Service
+Deploy Service
 
 ---
 
-## Step 5
+### Step 5
 
-Verify
+Validate Service
 
 Confirm:
 
-- Service starts
-- Storage mounts correctly
-- Backup strategy exists
-- Monitoring exists
+- Service Operational
+- Storage Connected
+- Monitoring Configured
+- Backup Configured
+- Recovery Documented
 
 ---
 
-# New User Onboarding
+### Step 6
 
-## Supported Services
+Add To Readiness Reviews
 
-### Plex
+Reference:
 
-Users:
-
-- Eric
-- Beth
-- Amara
-- Adam
-- FeFe
-- William
+service-readiness-matrix.md
 
 ---
 
-### Audiobookshelf
+## Service Retirement
 
-Users:
-
-- Eric
-- Beth
-- Amara
-- Adam
-- FeFe
-- William
-
----
-
-### Immich
-
-Users:
-
-- Eric
-- Beth
-- Amara
-
----
-
-### Vaultwarden
-
-Users:
-
-- Eric
-- Beth
-- Amara
-
----
-
-## User Provisioning Steps
-
-1. Create user account.
-2. Verify user access.
-3. Confirm login.
-4. Record account creation if required.
-
----
-
-# Monthly Maintenance
-
-## Infrastructure Review
+Before service removal:
 
 Verify:
 
-- UDM-Pro healthy
-- Switches healthy
-- Access Points healthy
-- UPS healthy
+- Data Archived
+- Dependencies Reviewed
+- Documentation Updated
+- Monitoring Removed
+- Backups Reviewed
 
 ---
 
-## Service Review
+# Monitoring Operations
 
-Verify:
+## Monitoring Platforms
 
-- Services running
-- Logs reviewed
-- Storage healthy
-- Backups healthy
+### Homepage
 
----
-
-## Capacity Review
-
-Verify:
-
-- Storage usage
-- Memory usage
-- CPU usage
-- UPS status
-
----
-
-# Update Policy
-
-## Operating Systems
-
-Policy:
+Purpose:
 
 ```text
-Automatic Updates
+Dashboard
+Visibility
+Access
 ```
-
-unless application-specific guidance requires otherwise.
 
 ---
 
-## Docker Containers
+### Uptime Kuma
 
-Policy:
+Purpose:
 
 ```text
-As Needed
+Monitoring
+Alerting
+Notifications
 ```
-
-Update when:
-
-- Security issue exists
-- New feature required
-- Bug impacts operation
 
 ---
 
-## Proxmox
+## Monitoring Requirements
 
-Policy:
+Every production service must:
 
-```text
-As Needed
-```
+- Appear in Homepage
+- Be monitored by Uptime Kuma
+- Have documented ownership
+- Have a documented recovery path
 
-Update only after:
+Reference:
 
-- Reading release notes
-- Confirming backups
-- Verifying rollback options
+service-readiness-matrix.md
 
 ---
 
-# Maintenance Window
+## Alert Response Procedure
 
-## Preferred Window
+### Step 1
 
-```text
-Late Night
-```
+Identify affected service.
 
-Maintenance activities should be performed when household impact is lowest.
+---
+
+### Step 2
+
+Determine impact:
+
+- Critical
+- Important
+- Standard
+
+---
+
+### Step 3
+
+Review logs and metrics.
+
+---
+
+### Step 4
+
+Attempt service restoration.
+
+---
+
+### Step 5
+
+Escalate to recovery procedures if required.
+
+Reference:
+
+DISASTER-RECOVERY.md
 
 ---
 
 # Backup Operations
 
-## Before Major Changes
+## Backup Policy
 
-Required:
+Operational rule:
 
 ```text
 Backup First
@@ -406,265 +399,356 @@ Change Second
 
 ---
 
-## Verify
+## Backup Platform
 
-Before proceeding:
-
-- Backup completed
-- Backup repository healthy
-- Restore path known
-
----
-
-# Restore Operations
-
-When restoring:
-
-1. Infrastructure first.
-2. Storage second.
-3. Critical services third.
-4. Remaining services last.
-
-Reference:
+Primary Backup Platform:
 
 ```text
-DISASTER-RECOVERY.md
-BACKUP-AND-RESTORE.md
+Kopia
 ```
 
 ---
 
-# Monitoring Operations
+## Backup Destinations
 
-## Monitoring Platform
+### Local Repository
 
+```text
+OpenMediaVault
+```
+
+### Offsite Repository
+
+```text
+OneDrive
+```
+
+---
+
+## Verify Before Major Changes
+
+Confirm:
+
+- Backup Completed
+- Repository Healthy
+- Restore Path Known
+
+Reference:
+
+BACKUP-AND-RESTORE.md
+
+---
+
+# Recovery Operations
+
+## Recovery Philosophy
+
+The environment is designed to be:
+
+```text
+Recoverable
+Not Highly Available
+```
+
+---
+
+## Recovery Priority
+
+### Tier 1
+
+Recover First:
+
+- Vaultwarden
+- Home Assistant
+- Immich
+- Paperless
+- Nextcloud
+- BookStack
+- AdGuard
+
+---
+
+### Tier 2
+
+Recover Second:
+
+- Audiobookshelf
+- Navidrome
+- Syncthing
 - Homepage
 - Uptime Kuma
 
 ---
 
-## Alert Destinations
+### Tier 3
 
-```text
-Email
-+
-Mobile Notifications
-```
+Recover Third:
+
+- Plex
+- Tautulli
+- MeTube
+- ARR Platform
+
+Reference:
+
+RECOVERY-TIME-OBJECTIVES.md
 
 ---
 
-## Alert Review
+## Recovery Escalation
+
+Reference:
+
+- BACKUP-AND-RESTORE.md
+- DISASTER-RECOVERY.md
+- disaster-recovery-exercise.md
+
+---
+
+# Documentation Operations
+
+## Documentation Sources
+
+Authoritative documentation is maintained in:
+
+- Repository
+- BookStack
+
+---
+
+## Documentation Expectations
+
+Documentation must be:
+
+✅ Accurate
+
+✅ Current
+
+✅ Reviewed
+
+✅ Searchable
+
+✅ Recoverable
+
+Reference:
+
+DOCUMENTATION-GOVERNANCE-STANDARD.md
+
+---
+
+## Documentation Reviews
+
+### Monthly
 
 Review:
 
-- Failed services
-- Certificate warnings
-- DNS warnings
-- Storage warnings
-- Backup failures
+- Recent Changes
+- Service Updates
+- New Documentation
 
 ---
 
-# Configuration Backup Operations
+### Quarterly
 
-Configuration exports should be created immediately after major configuration changes.
+Review:
 
-## Components
+- Service Documentation
+- Security Documentation
+- Recovery Documentation
 
-### UDM-Pro
+---
 
-Backup:
+### Annual
+
+Perform:
+
+- Full Documentation Audit
+
+Reference:
+
+DOCUMENTATION-GOVERNANCE-STANDARD.md
+
+---
+
+# Security Operations
+
+## Security Reviews
+
+Security reviews are governed through:
+
+SECURITY-AUDIT-PROGRAM.md
+
+---
+
+## Review Scope
+
+Review:
+
+- MFA Compliance
+- Credential Management
+- Administrative Accounts
+- Tailscale Access
+- SSH Controls
+- Backup Protection
+
+---
+
+## Security Findings
+
+Track findings as:
+
+- Critical
+- High
+- Medium
+
+Reference:
+
+SECURITY-AUDIT-PROGRAM.md
+
+---
+
+# Readiness & Certification Operations
+
+## Readiness Validation Chain
 
 ```text
-After Initial Configuration
-After Major Changes
+Service Inventory
+        ↓
+Service Readiness Matrix
+        ↓
+Operations Readiness Assessment
+        ↓
+Disaster Recovery Exercise
+        ↓
+Production Readiness Review
+        ↓
+Operational Validation Report
+        ↓
+Environment Certification
 ```
 
 ---
 
-### TP-Link Switches
+## Operational Reviews
 
-Backup:
+### Quarterly
 
-```text
-After Initial Configuration
-After Major Changes
-```
+Review:
 
----
-
-### Proxmox
-
-Backup:
-
-```text
-After Initial Build
-After Significant VM Changes
-```
+- Service Readiness
+- Security Status
+- Backup Status
+- Documentation Status
 
 ---
 
-### Home Assistant
+### Annual
 
-Backup:
+Review:
 
-```text
-After Major Configuration Changes
-```
-
----
-
-# Hardware Replacement Procedure
-
-## Step 1
-
-Identify failed hardware.
+- Architecture
+- Recovery Validation
+- Operational Certification
+- Governance Programs
 
 ---
 
-## Step 2
+# Maintenance Schedule
 
-Determine impact.
-
----
-
-## Step 3
-
-Consult:
-
-```text
-HARDWARE-INVENTORY.md
-DISASTER-RECOVERY.md
-```
-
----
-
-## Step 4
-
-Replace hardware.
-
----
-
-## Step 5
-
-Restore configuration.
-
----
-
-## Step 6
-
-Validate operation.
-
----
-
-# UPS Operations
-
-## Platform
-
-```text
-NUT
-```
-
----
-
-## Shutdown Timer
-
-```text
-5 Minutes
-```
-
-On battery before shutdown process starts.
-
----
-
-## Quarterly Tasks
+## Monthly
 
 Verify:
 
-- Battery status
-- Load status
-- Runtime estimates
-
----
-
-# Annual Review
-
-## Documentation
-
-Review:
-
-- Hardware Inventory
-- Service Inventory
-- Network Documentation
-- Backup Documentation
-- DR Documentation
-
----
-
-## Infrastructure
-
-Review:
-
-- Storage Growth
-- UPS Capacity
-- VLAN Design
-- Service Placement
+- Infrastructure Health
+- Service Health
+- Storage Health
+- Backup Success
 - Monitoring Coverage
 
 ---
 
-## Security
+## Quarterly
 
-Review:
+Verify:
 
-- Passwords
-- MFA Usage
-- Tailscale Access
-- Account List
+- Security Program
+- Documentation Program
+- Recovery Program
+- Readiness Reviews
+
+---
+
+## Annual
+
+Perform:
+
+- Documentation Audit
+- Disaster Recovery Exercise
+- Certification Review
+- Capacity Review
 
 ---
 
 # Operational Checklists
 
-## New Service Checklist
+## Service Change Checklist
 
-- [ ] Purpose documented
-- [ ] Host selected
-- [ ] Storage assigned
-- [ ] Backup strategy assigned
-- [ ] Monitoring configured
-- [ ] Documentation updated
-
----
-
-## Change Checklist
-
-- [ ] Backup completed
-- [ ] Documentation reviewed
-- [ ] Change implemented
-- [ ] Service validated
-- [ ] Documentation updated
+- [ ] Backup Completed
+- [ ] Change Documented
+- [ ] Validation Completed
+- [ ] Monitoring Verified
+- [ ] Documentation Updated
 
 ---
 
 ## Recovery Checklist
 
-- [ ] Failure identified
-- [ ] Backups verified
-- [ ] Recovery executed
-- [ ] Service tested
-- [ ] Documentation updated
+- [ ] Failure Identified
+- [ ] Backup Verified
+- [ ] Recovery Executed
+- [ ] Service Tested
+- [ ] Documentation Updated
 
 ---
 
-# Open Decisions
+## Readiness Review Checklist
 
-| Decision | Status |
-|----------|----------|
-| Infrastructure Automation | Future Review |
-| AI-Assisted Operations | Future Review |
-| Automated Documentation Validation | Future Review |
-| Automated Backup Verification | Future Review |
+- [ ] Service Inventory Current
+- [ ] Readiness Matrix Current
+- [ ] Security Findings Reviewed
+- [ ] Recovery Validation Current
+- [ ] Documentation Current
+
+---
+
+# Future Operational Improvements
+
+Future initiatives may include:
+
+- Operations Automation
+- Backup Automation
+- Validation Automation
+- Audit Automation
+- Infrastructure As Code
+- Compliance Reporting
+
+These initiatives are managed separately from the completed implementation program.
+
+---
+
+# Success Criteria
+
+This runbook is considered current when:
+
+- Administrative Procedures Current
+- Security Standards Referenced
+- Recovery Procedures Current
+- Documentation Governance Active
+- Certification Framework Referenced
+- Operational Reviews Defined
+- Maintenance Schedules Defined
+
+The runbook must always represent the current operational procedures used to manage the WoogleNet environment.
 
 ---
 
@@ -672,4 +756,5 @@ Review:
 
 | Version | Date | Author | Notes |
 |----------|----------|----------|----------|
+| 2.0 | 2026-10-22 | Eric Yacoub | Updated following Sprint 08–10 recovery, governance, operational readiness, and certification framework implementation |
 | 1.0 | 2026-10-22 | Eric Yacoub | Initial Operations Runbook |
