@@ -1,0 +1,31 @@
+services:
+
+  readarr:
+    container_name: ${CONTAINER_NAME}
+
+    image: lscr.io/linuxserver/readarr:${IMAGE_TAG}
+
+    restart: unless-stopped
+    
+    network_mode: "service:gluetun"
+
+    depends_on:
+      - gluetun
+
+    ports:
+      - "${HTTP_PORT}:8787"
+
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+
+    volumes:
+      - ${CONFIG_PATH}:/config
+      - ${BOOKS_PATH}:/books
+      - ${DOWNLOADS_PATH}:/downloads
+
+
+networks:
+  wooglenet:
+    external: true

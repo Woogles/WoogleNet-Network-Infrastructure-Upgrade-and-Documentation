@@ -1,0 +1,51 @@
+services:
+
+  homeassistant:
+
+    container_name: ${CONTAINER_NAME}
+
+    image: ghcr.io/home-assistant/home-assistant:${IMAGE_TAG}
+
+    hostname: homeassistant
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: ${TZ}
+
+    ports:
+      - "${HTTP_PORT}:8123"
+
+    volumes:
+      - ${CONFIG_PATH}:/config
+      - /etc/localtime:/etc/localtime:ro
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:8123"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+    security_opt:
+      - no-new-privileges:true
+
+    privileged: true
+
+    networks:
+      - wooglenet
+
+networks:
+
+  wooglenet:
+    external: true

@@ -1,0 +1,58 @@
+services:
+
+  navidrome:
+
+    container_name: ${CONTAINER_NAME}
+
+    image: deluan/navidrome:${IMAGE_TAG}
+
+    hostname: navidrome
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+
+      ND_SCANSCHEDULE: ${SCAN_SCHEDULE}
+
+      ND_LOGLEVEL: ${LOG_LEVEL}
+
+      ND_SESSIONTIMEOUT: ${SESSION_TIMEOUT}
+
+      ND_BASEURL: ""
+
+      TZ: ${TZ}
+
+    ports:
+      - "${HTTP_PORT}:4533"
+
+    volumes:
+      - ${DATA_PATH}:/data
+      - ${MUSIC_PATH}:/music:ro
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:4533/ping"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    security_opt:
+      - no-new-privileges:true
+
+    networks:
+      - wooglenet
+
+networks:
+
+  wooglenet:
+    external: true

@@ -1,0 +1,90 @@
+services:
+
+  redis:
+
+    container_name: ${REDIS_CONTAINER_NAME}
+
+    image: redis:${REDIS_IMAGE_TAG}
+
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --save
+      - "60"
+      - "1"
+
+    volumes:
+      - ${REDIS_DATA_PATH}:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - wooglenet
+
+  postgres:
+
+    container_name: ${POSTGRES_CONTAINER_NAME}
+
+    image: postgres:${POSTGRES_IMAGE_TAG}
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER}"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - wooglenet
+
+  nextcloud:
+
+    container_name: ${CONTAINER_NAME}
+
+    image: nextcloud:${IMAGE_TAG}
+
+    restart: unless-stopped
+
+    depends_on:
+
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    environment:
+
+      POSTGRES_HOST: postgres
+
+      POSTGRES_DB: ${POSTGRES_DB}
+
+      POSTGRES_USER: ${POSTGRES_USER}
+
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      RED

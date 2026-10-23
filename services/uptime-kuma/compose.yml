@@ -1,0 +1,48 @@
+services:
+
+  uptime-kuma:
+
+    container_name: ${CONTAINER_NAME}
+
+    image: louislam/uptime-kuma:${IMAGE_TAG}
+
+    hostname: uptime-kuma
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: ${TZ}
+
+    ports:
+      - "${HTTP_PORT}:3001"
+
+    volumes:
+      - ${DATA_PATH}:/app/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:3001"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    security_opt:
+      - no-new-privileges:true
+
+    networks:
+      - wooglenet
+
+networks:
+
+  wooglenet:
+    external: true

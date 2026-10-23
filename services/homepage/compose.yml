@@ -1,0 +1,51 @@
+services:
+
+  homepage:
+
+    container_name: ${CONTAINER_NAME}
+
+    image: ghcr.io/gethomepage/homepage:${IMAGE_TAG}
+
+    hostname: homepage
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+
+    ports:
+      - "${HTTP_PORT}:3000"
+
+    volumes:
+      - ${CONFIG_PATH}:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:3000"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    security_opt:
+      - no-new-privileges:true
+
+    networks:
+      - wooglenet
+
+networks:
+
+  wooglenet:
+    external: true

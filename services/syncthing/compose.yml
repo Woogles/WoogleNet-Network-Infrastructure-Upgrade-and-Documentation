@@ -1,0 +1,58 @@
+services:
+
+  syncthing:
+
+    container_name: ${CONTAINER_NAME}
+
+    image: lscr.io/linuxserver/syncthing:${IMAGE_TAG}
+
+    hostname: ${DEVICE_NAME}
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+
+    ports:
+      - "${WEB_PORT}:8384"
+      - "${SYNC_PORT}:22000/tcp"
+      - "${SYNC_PORT}:22000/udp"
+      - "${DISCOVERY_PORT}:21027/udp"
+
+    volumes:
+      - ${CONFIG_PATH}:/config
+
+      # Primary Sync Targets
+      - ${DOCUMENTS_PATH}:/sync/documents
+      - ${PHOTOS_PATH}:/sync/photos
+      - ${BOOKSTACK_EXPORT_PATH}:/sync/bookstack
+      - ${PAPERLESS_EXPORT_PATH}:/sync/paperless
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:8384/rest/noauth/health"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    security_opt:
+      - no-new-privileges:true
+
+    networks:
+      - wooglenet
+
+networks:
+
+  wooglenet:
+    external: true

@@ -1,0 +1,24 @@
+services:
+
+  qbittorrent:
+    container_name: ${CONTAINER_NAME}
+
+    image: lscr.io/linuxserver/qbittorrent:${IMAGE_TAG}
+
+    restart: unless-stopped
+
+    network_mode: "service:gluetun"
+
+    depends_on:
+      - gluetun
+
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ}
+      WEBUI_PORT: 8080
+
+  QBT_WEBUI_PORT: 8080
+    volumes:
+      - ${CONFIG_PATH}:/config
+      - ${DOWNLOADS_PATH}:/downloads
