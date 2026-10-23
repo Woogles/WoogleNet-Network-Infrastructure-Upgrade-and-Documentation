@@ -2,873 +2,189 @@
 
 ## Purpose
 
-This document defines the rollback and recovery procedures for Sprint 03 Core Infrastructure services.
-
-The objective is to restore critical infrastructure functionality if deployment or configuration changes result in:
-
-- DNS outages
-- Monitoring failures
-- Homepage failures
-- Container corruption
-- Configuration loss
-- DAX host failures
-- MAX host failures
-
-This procedure covers:
-
-```text
-dax-adguard
-max-adguard
-dax-homepage
-dax-uptime
-```
+Restore network services if Sprint 03 deployment introduces instability or service outages.
 
 ---
 
-# Scope
+# Rollback Conditions
 
-## Included Services
+Execute rollback if:
 
-### DNS
-
-```text
-dax-adguard
-max-adguard
-```
-
----
-
-### Service Dashboard
-
-```text
-dax-homepage
-```
+- DNS resolution fails
+- DNS redundancy fails
+- Monitoring impacts production systems
+- Homepage unavailable
+- Infrastructure services disrupted
 
 ---
 
-### Monitoring
+# Rollback Priority
 
-```text
-dax-uptime
-```
-
----
-
-## Dependencies
-
-Potentially Impacted:
-
-```text
-DNS
-
-Monitoring
-
-Backups
-
-Remote Administration
-
-All Future Services
-```
+1. Restore DNS
+2. Restore Network Services
+3. Restore Monitoring
+4. Restore Dashboard
 
 ---
 
-# Recovery Priorities
+# Rollback Procedure
 
-## Priority 1
+## Step 1
+
+Identify failed service.
+
+Examples:
+
+- AdGuard Primary
+- AdGuard Secondary
+- Homepage
+- Uptime Kuma
+
+---
+
+## Step 2
+
+Remove failed deployment.
+
+Actions:
+
+- Shutdown service
+- Stop container
+- Preserve logs
+
+---
+
+## Step 3
+
+Restore DNS
+
+If Primary DNS failed:
+
+- Promote Secondary DNS
+- Update DNS assignments if needed
+
+If both failed:
+
+- Restore previous DNS configuration
+- Use temporary public DNS if required
+
+---
+
+## Step 4
+
+Restore Container Backups
 
 Restore:
 
-```text
-DNS Resolution
-```
+- dax-adguard
+- max-adguard
+- dax-homepage
+- dax-uptime
 
-Services:
+From:
 
-```text
-dax-adguard
-
-max-adguard
-```
+- Proxmox backups
+- Configuration backups
 
 ---
 
-## Priority 2
+## Step 5
 
-Restore:
-
-```text
-Administrative Access
-```
-
-Services:
-
-```text
-Homepage
-
-Tailscale
-
-Proxmox
-```
-
----
-
-## Priority 3
-
-Restore:
-
-```text
-Monitoring
-```
-
-Service:
-
-```text
-dax-uptime
-```
-
----
-
-## Priority 4
-
-Restore:
-
-```text
-Dashboard Visibility
-```
-
-Service:
-
-```text
-dax-homepage
-```
-
----
-
-# Emergency Access Methods
-
-## Method 1
-
-### Tailscale
-
-Use:
-
-```text
-Tailscale Administrative Access
-```
+Validate Service Recovery
 
 Verify:
 
-- DAX Reachable
-- MAX Reachable
+- DNS Resolution
+- Internet Access
+- Internal Hostname Resolution
+- Dashboard Availability
 
 ---
 
-## Method 2
+# Failure Scenarios
 
-### Proxmox Web Console
+## AdGuard Primary Failure
 
-Access:
+Impact:
 
-```text
-https://dax:8006
+Low
 
-https://max:8006
-```
+Action:
 
-or direct IP access.
+Continue operations using Secondary DNS.
 
 ---
 
-## Method 3
+## AdGuard Secondary Failure
 
-### Physical Console
+Impact:
 
-Reference:
+Low
 
-```text
-RACK-LAYOUT.md
-```
+Action:
 
----
-
-# Backup Verification
-
-Before rollback verify backups exist.
-
-## Required Exports
-
-Verify:
-
-```text
-deployment/sprint-03/exports/
-```
-
-Contains:
-
-```text
-dax-adguard
-
-max-adguard
-
-dax-homepage
-
-dax-uptime
-```
+Continue operations using Primary DNS.
 
 ---
 
-## Configuration Backups
+## Dual DNS Failure
 
-Verify:
+Impact:
 
-- [ ] AdGuard Exports
-- [ ] Homepage Configurations
-- [ ] Uptime Kuma Configurations
+Critical
 
----
+Action:
 
-# Scenario 1
-
-## dax-adguard Failure
-
-### Symptoms
-
-```text
-DNS Resolution Failure
-
-DNS Timeouts
-
-Filtering Not Working
-```
+Restore backup configuration immediately.
 
 ---
 
-### Immediate Actions
+## Homepage Failure
 
-#### Step 1
+Impact:
 
-Validate:
+Low
 
-```text
-max-adguard Operational
-```
+Action:
 
----
-
-#### Step 2
-
-Test:
-
-```bash
-nslookup google.com 10.0.10.51
-```
-
-Expected:
-
-```text
-Successful Resolution
-```
+Restore service when practical.
 
 ---
 
-#### Step 3
+## Uptime Kuma Failure
 
-Temporarily operate using:
+Impact:
 
-```text
-max-adguard
-```
+Low
 
----
+Action:
 
-#### Step 4
-
-Investigate:
-
-```text
-Container Failure
-
-Network Failure
-
-Application Failure
-```
+Restore service when practical.
 
 ---
 
-### Recovery
+# Validation After Rollback
 
-Restart:
+Confirm:
 
-```bash
-pct start 100
-```
-
-or
-
-```bash
-systemctl restart AdGuardHome
-```
+- [ ] DNS operational
+- [ ] Internet operational
+- [ ] Internal services reachable
+- [ ] Monitoring operational
+- [ ] Tailscale operational
 
 ---
 
-### Validation
+# Rollback Complete
 
-Verify:
+Date:
 
-```bash
-nslookup google.com 10.0.10.50
-```
+____________________
 
-Successful.
+Administrator:
 
----
+____________________
 
-# Scenario 2
+Notes:
 
-## max-adguard Failure
-
-### Symptoms
-
-```text
-Secondary DNS Unavailable
-```
-
----
-
-### Immediate Actions
-
-Primary DNS remains available:
-
-```text
-dax-adguard
-```
-
-No immediate user impact expected.
-
----
-
-### Recovery
-
-Restart:
-
-```bash
-pct start 101
-```
-
-or
-
-```bash
-systemctl restart AdGuardHome
-```
-
----
-
-### Validation
-
-Verify:
-
-```bash
-nslookup google.com 10.0.10.51
-```
-
-Successful.
-
----
-
-# Scenario 3
-
-## Complete DNS Failure
-
-### Symptoms
-
-```text
-No Name Resolution
-
-Applications Appear Offline
-
-Package Updates Fail
-```
-
----
-
-### Validation
-
-Test:
-
-```bash
-ping 1.1.1.1
-```
-
-If successful:
-
-```text
-Network Operational
-
-DNS Failed
-```
-
----
-
-### Temporary Emergency DNS
-
-Configure:
-
-```text
-1.1.1.1
-
-9.9.9.9
-```
-
-until restoration completed.
-
----
-
-### Recovery Procedure
-
-1. Restore AdGuard configuration.
-2. Restart AdGuard service.
-3. Verify upstream DNS.
-4. Restore local records.
-
----
-
-### Validation
-
-Verify:
-
-```bash
-nslookup google.com
-
-nslookup github.com
-
-nslookup microsoft.com
-```
-
----
-
-# Scenario 4
-
-## dax-homepage Failure
-
-### Symptoms
-
-```text
-Homepage Unavailable
-
-Dashboard Missing
-```
-
----
-
-### Impact
-
-Operational visibility reduced.
-
-No production services impacted.
-
----
-
-### Recovery
-
-Restart:
-
-```bash
-pct start 110
-```
-
-or
-
-```bash
-docker restart dax-homepage
-```
-
----
-
-### Configuration Restore
-
-Restore:
-
-```text
-/opt/homepage/config
-```
-
-from backup.
-
----
-
-### Validation
-
-Browse:
-
-```text
-http://10.0.10.60
-```
-
-Verify:
-
-- Dashboard Loads
-- Links Work
-- Categories Visible
-
----
-
-# Scenario 5
-
-## dax-uptime Failure
-
-### Symptoms
-
-```text
-Monitoring Offline
-
-Alerts Not Sent
-```
-
----
-
-### Impact
-
-Services continue operating.
-
-Visibility is lost.
-
----
-
-### Recovery
-
-Restart:
-
-```bash
-pct start 111
-```
-
-or
-
-```bash
-docker restart dax-uptime
-```
-
----
-
-### Configuration Restore
-
-Restore:
-
-```text
-/opt/uptime-kuma/data
-```
-
-from backup.
-
----
-
-### Validation
-
-Verify:
-
-- Dashboard Accessible
-- Monitors Present
-- Alerts Functional
-
----
-
-# Scenario 6
-
-## DAX Host Failure
-
-### Impact
-
-Potential Loss Of:
-
-```text
-dax-adguard
-
-dax-homepage
-
-dax-uptime
-```
-
----
-
-### Immediate Actions
-
-Verify:
-
-```text
-max-adguard Operational
-```
-
-DNS should continue functioning.
-
----
-
-### Recovery Order
-
-#### Step 1
-
-Restore DAX Host.
-
-Reference:
-
-```text
-Sprint 02 Rollback Procedure
-```
-
----
-
-#### Step 2
-
-Restore:
-
-```text
-dax-adguard
-```
-
----
-
-#### Step 3
-
-Restore:
-
-```text
-dax-homepage
-```
-
----
-
-#### Step 4
-
-Restore:
-
-```text
-dax-uptime
-```
-
----
-
-### Validation
-
-Execute:
-
-```text
-Sprint 03 Validation Checklist
-```
-
----
-
-# Scenario 7
-
-## MAX Host Failure
-
-### Impact
-
-Potential Loss Of:
-
-```text
-max-adguard
-```
-
----
-
-### Immediate Actions
-
-Verify:
-
-```text
-dax-adguard Operational
-```
-
-DNS functionality should continue.
-
----
-
-### Recovery
-
-Restore MAX Host.
-
-Reference:
-
-```text
-deployment/sprint-02/rollback-procedure.md
-```
-
----
-
-### Restore Service
-
-Restore:
-
-```text
-max-adguard
-```
-
-from configuration exports.
-
----
-
-# Configuration Restore Procedure
-
-## AdGuard
-
-Restore:
-
-- DNS Configuration
-- Filters
-- Local Records
-- Client Settings
-
----
-
-## Homepage
-
-Restore:
-
-- services.yaml
-- widgets.yaml
-- settings.yaml
-- bookmarks.yaml
-
----
-
-## Uptime Kuma
-
-Restore:
-
-- Monitors
-- Alerting
-- Users
-- Status Pages
-
----
-
-# Post-Recovery Validation
-
-Execute:
-
-```text
-deployment/sprint-03/validation-checklist.md
-```
-
----
-
-## Mandatory Validation
-
-### DNS
-
-- [ ] Resolution Functional
-- [ ] Failover Functional
-
----
-
-### Homepage
-
-- [ ] Dashboard Online
-
----
-
-### Monitoring
-
-- [ ] Monitoring Online
-- [ ] Alerts Functional
-
----
-
-### Infrastructure
-
-- [ ] DAX Reachable
-- [ ] MAX Reachable
-- [ ] PAX Reachable
-- [ ] JAX Reachable
-
----
-
-# Incident Record
-
-## Date
-
-```text
-_____________________
-```
-
----
-
-## Service
-
-```text
-_____________________
-```
-
----
-
-## Issue
-
-```text
-_____________________
-```
-
----
-
-## Root Cause
-
-```text
-_____________________
-```
-
----
-
-## Corrective Actions
-
-```text
-_____________________
-```
-
----
-
-## Recovery Time
-
-```text
-_____________________
-```
-
----
-
-## Result
-
-```text
-PASS / FAIL
-```
-
----
-
-# Sprint Recovery Success Criteria
-
-Recovery is successful when:
-
-- DNS Resolution Restored
-- Monitoring Restored
-- Homepage Restored
-- Configuration Restored
-- Validation Checklist Passed
-- Documentation Updated
-
----
-
-# Related Documents
-
-- README.md
-- validation-checklist.md
-- dax-adguard.md
-- max-adguard.md
-- dax-homepage.md
-- dax-uptime.md
-- ../standards/backup-standard.md
-- ../standards/monitoring-standard.md
-- ../standards/network-security-standard.md
-
----
-
-# Revision History
-
-| Version | Date | Author | Notes |
-|----------|----------|----------|----------|
-| 1.0 | 2026-10-22 | Eric Yacoub | Initial Sprint 03 Rollback Procedure |
+____________________

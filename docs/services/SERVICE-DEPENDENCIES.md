@@ -2,774 +2,361 @@
 
 ## Purpose
 
-This document defines service relationships and dependencies within the WoogleNet environment.
+This document serves as the authoritative dependency map for all approved WoogleNet services.
 
-The goals of this document are to:
+The goals of this document are:
 
-- Identify service dependencies
-- Improve troubleshooting
-- Simplify recovery operations
-- Support disaster recovery planning
-- Support monitoring configuration
-- Identify critical failure points
+- Identify critical dependencies
+- Support troubleshooting
+- Support recovery planning
+- Establish startup order
+- Establish recovery order
+- Support monitoring design
+- Reduce service coupling surprises
 
-This document should be reviewed whenever services are added, removed, or relocated.
+Reference Documents:
 
----
-
-# Dependency Levels
-
-## Critical Dependency
-
-If the dependency fails, the service becomes unavailable.
-
-Example:
-
-```text
-Vaultwarden
-    →
-Storage
-```
+- ARCHITECTURE.md
+- NETWORK-TOPOLOGY.md
+- SERVICE-INVENTORY.md
+- DNS-ARCHITECTURE.md
+- DISASTER-RECOVERY.md
 
 ---
 
-## Important Dependency
+# Dependency Hierarchy
 
-The service may function with reduced capabilities.
-
-Example:
-
-```text
-Homepage
-    →
-Uptime Kuma
-```
-
----
-
-## Optional Dependency
-
-Provides enhanced functionality but is not required.
-
-Example:
-
-```text
-Plex
-    →
-Tautulli
-```
-
----
-
-# Infrastructure Dependency Tree
-
-```text
 Internet
-    │
-    ▼
+↓
 UDM-Pro
-    │
-    ▼
-Switching
-    │
-    ▼
+↓
+Network Infrastructure
+↓
 DNS
-    │
-    ▼
+↓
 Storage
-    │
-    ▼
-Services
-```
+↓
+Core Services
+↓
+Application Services
 
 ---
 
 # Core Infrastructure Dependencies
 
-## UDM-Pro
+## Network
 
-### Depends On
+Required By:
 
-None
+- DNS
+- Storage
+- Monitoring
+- All Application Services
 
-### Required By
-
-- VLANs
-- DHCP
-- Routing
-- Internet Access
-- Tailscale Routing
-
-### Impact if Failed
-
-```text
-Complete Network Outage
-```
-
----
-
-## Switching Infrastructure
-
-### Depends On
+Components:
 
 - UDM-Pro
+- TP-Link Switches
+- Access Points
 
-### Required By
+Failure Impact:
 
-- All Servers
-- All Access Points
-- All Clients
+Environment-wide outage.
 
-### Impact if Failed
+Criticality:
 
-```text
-Loss Of Connected Devices
-```
+Critical
 
 ---
 
-## DNS Platform
+## DNS
 
-### Components
+Components:
 
 - AdGuard Primary
 - AdGuard Secondary
 
-### Depends On
+Dependent Services:
 
-- DAX
-- MAX
-- Network Connectivity
+- OpenMediaVault
+- Homepage
+- Uptime Kuma
+- Home Assistant
+- Vaultwarden
+- Immich
+- Nextcloud
+- Paperless
+- BookStack
+- ARR Stack
+- Navidrome
 
-### Required By
+Failure Impact:
 
-- All Services
-- All Clients
-- Tailscale
+High
 
-### Impact if Failed
+Criticality:
 
-```text
-Major Service Disruption
-```
+Critical
 
 ---
 
-# Storage Dependencies
+## Storage
 
-## OpenMediaVault
+Components:
 
-### Depends On
+- OpenMediaVault
+- SMB Shares
+- Backup Repository
 
-- PAX
-- Storage Subsystem
-- Networking
-
-### Required By
+Dependent Services:
 
 - Immich
+- Audiobookshelf
+- Plex
+- Home Assistant
+- Vaultwarden
 - Paperless
 - Nextcloud
-- Audiobookshelf
-- ARR Stack
-- Plex
 - BookStack
+- ARR Stack
+- Navidrome
 
-### Impact if Failed
+Failure Impact:
 
-```text
-Major Application Outage
-```
+High
 
----
+Criticality:
 
-# Service Dependency Matrix
-
-| Service | DNS | Storage | Tailscale | Database | Internet |
-|----------|----------|----------|----------|----------|----------|
-| AdGuard | No | No | No | No | Optional |
-| Homepage | Yes | Yes | No | No | No |
-| Uptime Kuma | Yes | Yes | No | Yes | No |
-| Plex | Yes | Yes | Optional | No | Optional |
-| Audiobookshelf | Yes | Yes | Optional | No | No |
-| Immich | Yes | Yes | Optional | Yes | No |
-| Vaultwarden | Yes | Yes | Optional | Yes | No |
-| Home Assistant | Yes | Yes | Optional | Yes | Optional |
-| Nextcloud | Yes | Yes | Optional | Yes | No |
-| Paperless-ngx | Yes | Yes | Optional | Yes | No |
-| BookStack | Yes | Yes | Optional | Yes | No |
+Critical
 
 ---
 
-# Day 1 Services
-
-## AdGuard Home
-
-### Dependencies
-
-```text
-DAX / MAX
-    ↓
-Network
-```
-
-### Dependency Chain
-
-```text
-UDM-Pro
-    ↓
-Switch
-    ↓
-AdGuard
-```
-
----
+# Core Services
 
 ## Homepage
 
-### Dependencies
+Dependencies:
 
-```text
-DNS
-Storage
-Network
-```
+- DNS
+- Network
 
-### Internal Dependencies
+Used By:
 
-Optional:
+- Administrators
 
-```text
-Uptime Kuma
-```
+Failure Impact:
+
+Low
 
 ---
 
 ## Uptime Kuma
 
-### Dependencies
+Dependencies:
 
-```text
-DNS
-Storage
-Network
-```
+- DNS
+- Network
+
+Used By:
+
+- Administrators
+
+Failure Impact:
+
+Low
 
 ---
+
+# Media Services
 
 ## Plex
 
-### Dependencies
+Dependencies:
 
-```text
-Storage
-Network
-DNS
-```
+- DNS
+- Storage
+- Network
 
-### Optional Dependencies
+Recovery Priority:
 
-```text
-Internet
-Tautulli
-```
-
----
-
-## Audiobookshelf
-
-### Dependencies
-
-```text
-Storage
-Network
-DNS
-```
+3
 
 ---
 
 ## Immich
 
-### Critical Dependencies
+Dependencies:
 
-```text
-Storage
-Database
-DNS
-Network
-```
+- DNS
+- Storage
+- Network
+- Database
 
-### Failure Impact
+Recovery Priority:
 
-```text
-Photo Backup Failure
-```
-
-### Data Classification
-
-```text
-Critical
-```
+1
 
 ---
 
-# Day 2 Services
+## Audiobookshelf
+
+Dependencies:
+
+- DNS
+- Storage
+- Network
+
+Recovery Priority:
+
+2
+
+---
+
+# Automation Services
 
 ## Home Assistant
 
-### Dependencies
+Dependencies:
 
-```text
-DNS
-Storage
-Network
-```
+- DNS
+- Network
+- Storage
 
-### Dependent Systems
+Recovery Priority:
 
-```text
-IoT Devices
-```
-
-### Failure Impact
-
-```text
-Home Automation Loss
-```
+1
 
 ---
 
 ## Vaultwarden
 
-### Critical Dependencies
+Dependencies:
 
-```text
-DNS
-Storage
-Database
-Network
-```
+- DNS
+- Network
+- Storage
 
-### Failure Impact
+Recovery Priority:
 
-```text
-Password Management Unavailable
-```
+1
 
-### Data Classification
+---
 
-```text
-Critical
-```
+# ARR Platform
+
+## Dependency Chain
+
+Overseerr
+↓
+Sonarr / Radarr / Lidarr / Readarr
+↓
+Prowlarr
+↓
+qBittorrent
+↓
+Gluetun
+↓
+NordVPN
 
 ---
 
 ## qBittorrent
 
-### Dependencies
+Dependencies:
 
-```text
-Storage
-Internet
-DNS
-```
+- Gluetun
+- Storage
+- DNS
 
----
+Criticality:
 
-## ARR Stack
-
-### Components
-
-- Sonarr
-- Radarr
-- Lidarr
-- Readarr
-- Bazarr
-- Prowlarr
-- Overseerr
+Important
 
 ---
 
-### Shared Dependencies
+## Gluetun
 
-```text
-Storage
-DNS
-Internet
-qBittorrent
-```
+Dependencies:
 
----
+- DNS
+- Internet
+- NordVPN
 
-### Dependency Chain
+Criticality:
 
-```text
-Prowlarr
-     ↓
-Sonarr/Radarr/Lidarr/Readarr
-     ↓
-qBittorrent
-     ↓
-Storage
-```
+Critical
 
 ---
 
-## Navidrome
-
-### Dependencies
-
-```text
-Storage
-DNS
-```
-
----
-
-## Tautulli
-
-### Dependencies
-
-```text
-Plex
-DNS
-```
-
-### Impact
-
-If Plex fails:
-
-```text
-Tautulli Fails
-```
-
----
-
-# Day 4 Services
+# Knowledge Services
 
 ## Paperless-ngx
 
-### Critical Dependencies
+Dependencies:
 
-```text
-Storage
-Database
-DNS
-```
+- DNS
+- Storage
 
-### Failure Impact
+Recovery Priority:
 
-```text
-Document Access Lost
-```
-
-### Data Classification
-
-```text
-Critical
-```
+1
 
 ---
 
 ## Nextcloud
 
-### Critical Dependencies
+Dependencies:
 
-```text
-Storage
-Database
-DNS
-```
+- DNS
+- Storage
 
-### Failure Impact
+Recovery Priority:
 
-```text
-File Access Lost
-```
-
-### Data Classification
-
-```text
-Critical
-```
+1
 
 ---
 
 ## BookStack
 
-### Critical Dependencies
+Dependencies:
 
-```text
-Storage
-Database
-DNS
-```
+- DNS
+- Storage
 
-### Failure Impact
+Recovery Priority:
 
-```text
-Documentation Access Lost
-```
-
-### Data Classification
-
-```text
-Critical
-```
+1
 
 ---
 
 ## Syncthing
 
-### Dependencies
+Dependencies:
 
-```text
-DNS
-Storage
-Network
-```
-
----
-
-# Monitoring Dependencies
-
-## Uptime Kuma Monitors
-
-### Infrastructure
-
-- UDM-Pro
-- DAX
-- MAX
-- PAX
-- JAX
-- OpenMediaVault
-
----
-
-### Services
-
-- AdGuard Primary
-- AdGuard Secondary
-- Plex
-- Immich
-- Vaultwarden
-- Home Assistant
-- Paperless
-- Nextcloud
-- BookStack
-
----
-
-# Tailscale Dependencies
-
-## Services Accessible Through Tailscale
-
-- Homepage
-- Uptime Kuma
-- Vaultwarden
-- Home Assistant
-- Nextcloud
-- Paperless-ngx
-- BookStack
-- Immich
-- Audiobookshelf
-
----
-
-## Depends On
-
-```text
-Internet
-DNS
-Tailscale Control Plane
-```
-
----
-
-# Database Dependencies
-
-## Services With Internal Databases
-
-- Immich
-- Vaultwarden
-- Home Assistant
-- Paperless-ngx
-- Nextcloud
-- BookStack
-- Uptime Kuma
-
----
-
-## Strategy
-
-```text
-Per-Service Databases
-
-No Shared Database Platform
-```
-
----
-
-# Critical Failure Domains
-
-## DNS Failure
-
-Affected:
-
-- Most Services
-- Most Clients
-
-Severity:
-
-```text
-High
-```
-
----
-
-## OpenMediaVault Failure
-
-Affected:
-
-- Immich
-- Plex
-- Audiobookshelf
-- Nextcloud
-- Paperless
-- ARR Stack
-- BookStack
-
-Severity:
-
-```text
-Critical
-```
-
----
-
-## JAX Failure
-
-Affected:
-
-- Plex
-- Audiobookshelf
-- Immich
-- Vaultwarden
-- ARR Stack
-- BookStack
-- Nextcloud
-- Paperless
-
-Severity:
-
-```text
-Critical
-```
-
----
-
-## UDM-Pro Failure
-
-Affected:
-
-```text
-Entire Environment
-```
-
-Severity:
-
-```text
-Critical
-```
-
----
-
-# Restore Order
-
-## Priority 1
-
-- UDM-Pro
-- Switching
 - DNS
-- OpenMediaVault
+- Storage
+
+Recovery Priority:
+
+2
 
 ---
 
-## Priority 2
+# Recovery Order
 
-- Vaultwarden
-- Immich
-- Paperless
-- Nextcloud
-- Home Assistant
-
----
-
-## Priority 3
-
-- BookStack
-- AudioBookshelf
-- Homepage
-- Uptime Kuma
-
----
-
-## Priority 4
-
-- Plex
-- ARR Stack
-- Tautulli
-- MeTube
-
----
-
-# Single Points of Failure
-
-## Current
-
-| Component | Impact |
-|------------|----------|
-| UDM-Pro | Network Outage |
-| OpenMediaVault | Storage Outage |
-| JAX | Service Outage |
-| Internet | Remote Access Impact |
-
----
-
-## Mitigations
-
-| Component | Mitigation |
-|------------|----------|
-| UDM-Pro | USG Pro Backup |
-| DNS | AdGuard HA Pair |
-| Services | Backups |
-| Data | Kopia + OneDrive |
-
----
-
-# Future Improvements
-
-## Potential Enhancements
-
-- Additional Storage Host
-- Secondary JAX Equivalent
-- Automated Dependency Monitoring
-- Automated Recovery Validation
-
----
-
-# Open Decisions
-
-| Decision | Status |
-|----------|----------|
-| Service Dependency Visualization | Future |
-| Automated Dependency Mapping | Future |
-| Dependency-Based Alerting | Future |
-
----
-
-# Revision History
-
-| Version | Date | Author | Notes |
-|----------|----------|----------|----------|
-| 1.0 | 2026-10-22 | Eric Yacoub | Initial Service Dependency Documentation |
+1. UDM-Pro
+2. Switching
+3. DNS
+4. OpenMediaVault
+5. Homepage
+6. Uptime Kuma
+7. Home Assistant
+8. Vaultwarden
+9. Immich
+10. Paperless
+11. Nextcloud
+12. BookStack
+13. Audiobookshelf
+14. Plex
+15. ARR Stack
+16. Optional Services
